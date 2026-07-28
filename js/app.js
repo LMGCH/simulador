@@ -410,10 +410,13 @@ const latencyChart = new Chart(ctx,{
     grid:{
 
         color:"#2f3445"
+            }
+
+        }
 
     }
 
-},
+});
 updateMetrics();
 
 setInterval(updateMetrics,2000);
