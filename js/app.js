@@ -471,6 +471,34 @@ const latencyChart = new Chart(ctx,{
 
 });         // new Chart
 // ======================================================
+// SYSTEM STATUS
+// ======================================================
+
+function renderSystemStatus(){
+
+    const status = document.getElementById("systemStatus");
+
+    if(system.errorRate > 0.30){
+
+        status.innerHTML = "🔴 SYSTEM STATUS: CRITICAL";
+        status.className = "mt-2 text-sm font-semibold text-red-400";
+
+    }
+    else if(system.cpu > 70 || system.latency > 170){
+
+        status.innerHTML = "🟡 SYSTEM STATUS: DEGRADED";
+        status.className = "mt-2 text-sm font-semibold text-yellow-400";
+
+    }
+    else{
+
+        status.innerHTML = "🟢 SYSTEM STATUS: HEALTHY";
+        status.className = "mt-2 text-sm font-semibold text-green-400";
+
+    }
+
+}
+// ======================================================
 // INICIALIZACIÓN
 // ======================================================
 function tick(){
@@ -495,7 +523,7 @@ if(system.errorRate>0.30){
 }
     renderKPIs();
     renderAlerts();
-
+    renderSystemStatus();
 }
 
 tick();
