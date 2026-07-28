@@ -134,22 +134,20 @@ grid.appendChild(card);
 // ======================================================
 
 const system = {
-const alerts = [];
     users: 340,
-
     throughput: 1450,
-
     cpu: 38,
-
     memory: 54,
-
     latency: 118,
-
     errorRate: 0.05,
-
     services: 12
-
 };
+
+// Historial de alertas
+const alerts = [];
+
+// Histórico de latencia para la gráfica
+const latencyHistory = new Array(60).fill(system.latency);
 
 // ======================================================
 // MOTOR DE SIMULACIÓN
