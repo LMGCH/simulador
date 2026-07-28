@@ -483,71 +483,126 @@ function simulateSystem(){
 
 function updateMetrics(){
 
-metrics.forEach((m,index)=>{
+    // Actualiza el estado del sistema
+    simulateSystem();
 
-let value=random(m.min,m.max);
+    // Valores reales procedentes del motor
+    const values = [
 
-if(m.decimals===0){
+        system.latency,
+        system.throughput,
+        system.errorRate,
+        system.cpu,
+        system.memory,
+        system.services
 
-value=Math.round(value);
+    ];
 
-}else{
+    metrics.forEach((m,index)=>{
 
-value=value.toFixed(m.decimals);
+        let value = values[index];
 
-}
+        if(m.decimals > 0){
 
-document.getElementById("metric"+index).innerHTML=
+            value = Number(value).toFixed(m.decimals);
 
-value+" <span class='text-lg text-gray-400'>"+m.unit+"</span>";
+        }else{
 
-const variation=(Math.random()*8).toFixed(1);
+            value = Math.round(value);
 
-let trend=document.getElementById("trend"+index);
+        }
 
-if(m.trend>0){
+        document.getElementById("metric"+index).innerHTML =
 
-trend.innerHTML=
+            value +
+            " <span class='text-lg text-gray-400'>" +
+            m.unit +
+            "</span>";
 
-`<span class="text-green-400">
+        const trend = document.getElementById("trend"+index);
 
-<i class="fa-solid fa-arrow-up"></i>
+        switch(index){
 
-+${variation}% desde hace 1 h
+            // Latencia
+            case 0:
 
-</span>`;
+                if(system.latency < 120){
 
-}
+                    trend.innerHTML =
+                    "<span class='text-green-400'><i class='fa-solid fa-check'></i> Excelente</span>";
 
-else if(m.trend<0){
+                }else if(system.latency < 170){
 
-trend.innerHTML=
+                    trend.innerHTML =
+                    "<span class='text-yellow-400'><i class='fa-solid fa-triangle-exclamation'></i> Normal</span>";
 
-`<span class="text-green-400">
+                }else{
 
-<i class="fa-solid fa-arrow-down"></i>
+                    trend.innerHTML =
+                    "<span class='text-red-400'><i class='fa-solid fa-circle-exclamation'></i> Alta</span>";
 
--${variation}% desde hace 1 h
+                }
 
-</span>`;
+            break;
 
-}
+            // Throughput
+            case 1:
 
-else{
+                trend.innerHTML =
+                "<span class='text-blue-400'>" +
+                system.users +
+                " usuarios conectados</span>";
 
-trend.innerHTML=
+            break;
 
-`<span class="text-cyan-400">
+            // Error Rate
+            case 2:
 
-<i class="fa-solid fa-circle"></i>
+                if(system.errorRate < 0.10){
 
-Estable
+                    trend.innerHTML =
+                    "<span class='text-green-400'>Sin incidencias</span>";
 
-</span>`;
+                }else if(system.errorRate < 0.30){
 
-}
+                    trend.innerHTML =
+                    "<span class='text-yellow-400'>Advertencias</span>";
 
-});
+                }else{
+
+                    trend.innerHTML =
+                    "<span class='text-red-500'>Errores críticos</span>";
+
+                }
+
+            break;
+
+            // CPU
+            case 3:
+
+                trend.innerHTML =
+                "<span class='text-orange-400'>Carga del sistema</span>";
+            break;
+
+            // Memoria
+            case 4:
+
+                trend.innerHTML =
+                "<span class='text-purple-400'>Uso de memoria</span>";
+
+            break;
+
+            // Servicios
+            case 5:
+
+                trend.innerHTML =
+                "<span class='text-cyan-400'>Todos operativos</span>";
+
+            break;
+
+        }
+
+    });
 
 }
 
