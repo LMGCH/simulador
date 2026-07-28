@@ -409,9 +409,75 @@ grid.appendChild(card);
 
 });
 
-function random(min,max){
+// -----------------------------
+// Estado del sistema
+// -----------------------------
 
-return Math.random()*(max-min)+min;
+const system = {
+
+    users: 340,
+
+    throughput: 1450,
+
+    cpu: 38,
+
+    memory: 54,
+
+    latency: 118,
+
+    errorRate: 0.05,
+
+    services: 12
+
+};
+
+// -----------------------------
+// Motor de simulación
+// -----------------------------
+
+function simulateSystem(){
+
+    // Variación de usuarios
+
+    system.users += Math.floor(Math.random()*41)-20;
+    system.users = Math.max(100, Math.min(1200, system.users));
+
+    // Throughput
+
+    system.throughput = Math.round(
+        800 + system.users * 2.2
+    );
+
+    // CPU
+
+    system.cpu =
+        18 +
+        system.throughput / 55 +
+        (Math.random()*5-2);
+
+    system.cpu = Math.min(100, system.cpu);
+
+    // Memoria
+
+    system.memory =
+        30 +
+        system.cpu * 0.65 +
+        (Math.random()*4-2);
+
+    system.memory = Math.min(95, system.memory);
+
+    // Latencia
+
+    system.latency =
+        70 +
+        system.cpu * 1.25 +
+        Math.random()*10;
+
+    // Error Rate
+
+    system.errorRate =
+        0.02 +
+        Math.max(0,(system.cpu-65))*0.015;
 
 }
 
