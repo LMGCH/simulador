@@ -408,15 +408,16 @@ const latencyChart = new Chart(ctx,{
     },
 
     grid:{
-
-        color:"#2f3445"
+                color:"#2f3445"
             }
 
-        }
+        }   // y
 
-    }
+    }       // scales
 
-});
+}           // options
+
+});         // new Chart
 updateMetrics();
 
 setInterval(updateMetrics,2000);
