@@ -704,41 +704,45 @@ const latencyChart = new Chart(ctx,{
 
             x:{
 
-                ticks:{
+    ticks:{
+        display:false
+    },
 
-                    display:false
+    border:{
+        display:false
+    },
 
-                },
+    grid:{
+        color:"#2f3445"
+    }
 
-                grid:{
-
-                    color:"#2f3445"
-
-                }
-
-            },
+},
 
             y:{
 
-                ticks:{
+    suggestedMin:80,
 
-                    color:"#94a3b8"
+    suggestedMax:220,
 
-                },
+    ticks:{
 
-                grid:{
+        color:"#94a3b8",
 
-                    color:"#2f3445"
+        stepSize:20
 
-                }
+    },
 
-            }
+    border:{
+        display:false
+    },
 
-        }
+    grid:{
+
+        color:"#2f3445"
 
     }
 
-});
+},
 updateMetrics();
 
 setInterval(updateMetrics,2000);
