@@ -13,7 +13,10 @@
     <!-- FontAwesome -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         body{
             background:#11131c;
@@ -266,7 +269,44 @@ class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
 
             <!-- GRAPH -->
 
-            <div class="card h-96 mb-8 placeholder"></div>
+            <!-- PANEL DEL GRÁFICO -->
+
+<div class="card p-6 mb-8">
+
+    <div class="flex justify-between items-center mb-6">
+
+        <div>
+
+            <h2 class="text-lg font-semibold">
+
+                Latencia del sistema
+
+            </h2>
+
+            <div class="text-sm text-gray-400">
+
+                Últimos 60 segundos
+
+            </div>
+
+        </div>
+
+        <div
+        class="bg-[#252b3d] px-4 py-2 rounded-lg text-sm text-gray-300">
+
+            Tiempo real
+
+        </div>
+
+    </div>
+
+    <div style="height:320px">
+
+        <canvas id="latencyChart"></canvas>
+
+    </div>
+
+</div>
 
             <!-- LOWER -->
 
@@ -605,7 +645,100 @@ function updateMetrics(){
     });
 
 }
+// =========================================
+// CHART.JS
+// =========================================
 
+const ctx = document
+.getElementById("latencyChart");
+
+const latencyChart = new Chart(ctx,{
+
+    type:"line",
+
+    data:{
+
+        labels:Array.from({length:60},(_,i)=>i-59),
+
+        datasets:[{
+
+            label:"Latencia",
+
+            data:new Array(60).fill(120),
+
+            borderColor:"#3b82f6",
+
+            borderWidth:3,
+
+            tension:.35,
+
+            pointRadius:0,
+
+            fill:true,
+
+            backgroundColor:"rgba(59,130,246,.15)"
+
+        }]
+
+    },
+
+    options:{
+
+        responsive:true,
+
+        maintainAspectRatio:false,
+
+        animation:false,
+
+        plugins:{
+
+            legend:{
+
+                display:false
+
+            }
+
+        },
+
+        scales:{
+
+            x:{
+
+                ticks:{
+
+                    display:false
+
+                },
+
+                grid:{
+
+                    color:"#2f3445"
+
+                }
+
+            },
+
+            y:{
+
+                ticks:{
+
+                    color:"#94a3b8"
+
+                },
+
+                grid:{
+
+                    color:"#2f3445"
+
+                }
+
+            }
+
+        }
+
+    }
+
+});
 updateMetrics();
 
 setInterval(updateMetrics,2000);
