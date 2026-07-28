@@ -257,19 +257,12 @@
 
         <section class="flex-1 overflow-auto p-8">
 
-            <!-- KPI -->
+            <!-- KPI DASHBOARD -->
 
-            <div class="grid grid-cols-4 gap-6 mb-8">
+<div id="kpi-grid"
+class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
 
-                <div class="card h-36 placeholder"></div>
-
-                <div class="card h-36 placeholder"></div>
-
-                <div class="card h-36 placeholder"></div>
-
-                <div class="card h-36 placeholder"></div>
-
-            </div>
+</div>
 
             <!-- GRAPH -->
 
@@ -292,7 +285,211 @@
     </main>
 
 </div>
+<script>
 
+const metrics = [
+
+{
+title:"Latencia",
+unit:"ms",
+icon:"fa-gauge-high",
+color:"#22c55e",
+min:90,
+max:180,
+decimals:0,
+trend:-1
+},
+
+{
+title:"Throughput",
+unit:"req/min",
+icon:"fa-arrow-trend-up",
+color:"#3b82f6",
+min:1200,
+max:1700,
+decimals:0,
+trend:1
+},
+
+{
+title:"Error Rate",
+unit:"%",
+icon:"fa-circle-exclamation",
+color:"#ef4444",
+min:0.01,
+max:0.35,
+decimals:2,
+trend:-1
+},
+
+{
+title:"CPU",
+unit:"%",
+icon:"fa-microchip",
+color:"#f59e0b",
+min:15,
+max:75,
+decimals:0,
+trend:1
+},
+
+{
+title:"Memory",
+unit:"%",
+icon:"fa-memory",
+color:"#8b5cf6",
+min:30,
+max:88,
+decimals:0,
+trend:1
+},
+
+{
+title:"Active Services",
+unit:"",
+icon:"fa-server",
+color:"#06b6d4",
+min:8,
+max:14,
+decimals:0,
+trend:0
+}
+
+];
+
+const grid=document.getElementById("kpi-grid");
+
+metrics.forEach((m,index)=>{
+
+const card=document.createElement("div");
+
+card.className="card p-6";
+
+card.innerHTML=`
+
+<div class="flex justify-between items-center">
+
+<div>
+
+<div class="text-xs uppercase tracking-widest text-gray-400">
+
+${m.title}
+
+</div>
+
+<div
+id="metric${index}"
+class="text-4xl font-bold mt-3">
+
+--
+
+</div>
+
+<div
+id="trend${index}"
+class="text-xs mt-3">
+
+</div>
+
+</div>
+
+<div
+class="w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
+style="background:${m.color}22;color:${m.color}">
+
+<i class="fa-solid ${m.icon}"></i>
+
+</div>
+
+</div>
+
+`;
+
+grid.appendChild(card);
+
+});
+
+function random(min,max){
+
+return Math.random()*(max-min)+min;
+
+}
+
+function updateMetrics(){
+
+metrics.forEach((m,index)=>{
+
+let value=random(m.min,m.max);
+
+if(m.decimals===0){
+
+value=Math.round(value);
+
+}else{
+
+value=value.toFixed(m.decimals);
+
+}
+
+document.getElementById("metric"+index).innerHTML=
+
+value+" <span class='text-lg text-gray-400'>"+m.unit+"</span>";
+
+const variation=(Math.random()*8).toFixed(1);
+
+let trend=document.getElementById("trend"+index);
+
+if(m.trend>0){
+
+trend.innerHTML=
+
+`<span class="text-green-400">
+
+<i class="fa-solid fa-arrow-up"></i>
+
++${variation}% desde hace 1 h
+
+</span>`;
+
+}
+
+else if(m.trend<0){
+
+trend.innerHTML=
+
+`<span class="text-green-400">
+
+<i class="fa-solid fa-arrow-down"></i>
+
+-${variation}% desde hace 1 h
+
+</span>`;
+
+}
+
+else{
+
+trend.innerHTML=
+
+`<span class="text-cyan-400">
+
+<i class="fa-solid fa-circle"></i>
+
+Estable
+
+</span>`;
+
+}
+
+});
+
+}
+
+updateMetrics();
+
+setInterval(updateMetrics,2000);
+
+</script>
 </body>
 
 </html>
