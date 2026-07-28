@@ -1,5 +1,3 @@
-<script>
-
 const metrics = [
 
 {
@@ -419,5 +417,3 @@ const latencyChart = new Chart(ctx,{
 updateMetrics();
 
 setInterval(updateMetrics,2000);
-
-</script>
