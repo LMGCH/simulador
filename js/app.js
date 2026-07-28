@@ -1,3 +1,12 @@
+// ======================================================
+// OBSERVABILITY LABS
+// Dashboard de Observabilidad (Demo)
+// Versión: 0.2
+// Autor: Luis Miguel Galacho + ChatGPT
+// ======================================================
+// ======================================================
+// CONFIGURACIÓN
+// ======================================================
 const metrics = [
 
 {
@@ -120,9 +129,9 @@ grid.appendChild(card);
 
 });
 
-// -----------------------------
-// Estado del sistema
-// -----------------------------
+// ======================================================
+// ESTADO GLOBAL
+// ======================================================
 
 const system = {
 
@@ -142,9 +151,9 @@ const system = {
 
 };
 
-// -----------------------------
-// Motor de simulación
-// -----------------------------
+// ======================================================
+// MOTOR DE SIMULACIÓN
+// ======================================================
 
 function simulateSystem(){
 
@@ -191,11 +200,11 @@ function simulateSystem(){
         Math.max(0,(system.cpu-65))*0.015;
 
 }
+// ======================================================
+// RENDERIZADO DE KPIs
+// ======================================================
+function renderKPIs(){
 
-function updateMetrics(){
-
-    // Actualiza el estado del sistema
-    simulateSystem();
 
     // Valores reales procedentes del motor
     const values = [
@@ -316,9 +325,9 @@ function updateMetrics(){
     });
 
 }
-// =========================================
+// ======================================================
 // CHART.JS
-// =========================================
+// ======================================================
 
 const ctx = document
 .getElementById("latencyChart");
@@ -418,6 +427,17 @@ const latencyChart = new Chart(ctx,{
 }           // options
 
 });         // new Chart
-updateMetrics();
+// ======================================================
+// INICIALIZACIÓN
+// ======================================================
+function tick(){
 
-setInterval(updateMetrics,2000);
+    simulateSystem();
+
+    renderKPIs();
+
+}
+
+tick();
+
+setInterval(tick,2000);
