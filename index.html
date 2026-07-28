@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Observability Labs</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <style>
+        body{
+            background:#11131c;
+            color:#dfe5ef;
+            font-family:Inter,system-ui,sans-serif;
+            overflow:hidden;
+        }
+
+        ::-webkit-scrollbar{
+            width:7px;
+        }
+
+        ::-webkit-scrollbar-thumb{
+            background:#34384b;
+            border-radius:10px;
+        }
+
+        ::-webkit-scrollbar-track{
+            background:#161922;
+        }
+
+        .card{
+            background:#1b1f2b;
+            border:1px solid #2f3445;
+            border-radius:10px;
+        }
+
+        .menu-item{
+            transition:.25s;
+        }
+
+        .menu-item:hover{
+            background:#232839;
+            color:white;
+        }
+
+        .active-menu{
+            background:#006DE4;
+            color:white;
+        }
+
+        .logo{
+            background:#006DE4;
+        }
+
+        .status-online{
+            width:10px;
+            height:10px;
+            border-radius:50%;
+            background:#00d084;
+            box-shadow:0 0 10px #00d084;
+        }
+
+        .placeholder{
+            background:
+                repeating-linear-gradient(
+                    -45deg,
+                    #242838,
+                    #242838 12px,
+                    #2d3344 12px,
+                    #2d3344 24px
+                );
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div class="flex h-screen">
+
+    <!-- SIDEBAR -->
+
+    <aside class="w-72 bg-[#171a24] border-r border-[#2f3445] flex flex-col">
+
+        <!-- Logo -->
+
+        <div class="p-6 border-b border-[#2f3445]">
+
+            <div class="flex items-center gap-4">
+
+                <div class="logo w-12 h-12 rounded-lg flex items-center justify-center font-bold text-xl">
+                    O
+                </div>
+
+                <div>
+
+                    <h1 class="font-bold text-lg">
+                        Observability
+                    </h1>
+
+                    <p class="text-xs text-gray-400">
+                        Enterprise Dashboard
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- MENU -->
+
+        <nav class="flex-1 mt-4 space-y-2 px-3">
+
+            <div class="menu-item active-menu rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer">
+
+                <i class="fa-solid fa-chart-line w-5"></i>
+
+                Dashboard
+
+            </div>
+
+            <div class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer">
+
+                <i class="fa-solid fa-heart-pulse w-5"></i>
+
+                APM
+
+            </div>
+
+            <div class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer">
+
+                <i class="fa-solid fa-server w-5"></i>
+
+                Infrastructure
+
+            </div>
+
+            <div class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer">
+
+                <i class="fa-solid fa-network-wired w-5"></i>
+
+                Services
+
+            </div>
+
+            <div class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer">
+
+                <i class="fa-solid fa-file-lines w-5"></i>
+
+                Logs
+
+            </div>
+
+            <div class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer">
+
+                <i class="fa-solid fa-bell w-5"></i>
+
+                Alerts
+
+            </div>
+
+            <div class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer">
+
+                <i class="fa-solid fa-gear w-5"></i>
+
+                Settings
+
+            </div>
+
+        </nav>
+
+        <!-- FOOTER -->
+
+        <div class="border-t border-[#2f3445] p-5">
+
+            <div class="flex justify-between items-center">
+
+                <div>
+
+                    <div class="text-sm font-semibold">
+                        Cluster
+                    </div>
+
+                    <div class="text-xs text-gray-400">
+                        observability-prod
+                    </div>
+
+                </div>
+
+                <div class="status-online"></div>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+    <!-- MAIN -->
+
+    <main class="flex-1 flex flex-col">
+
+        <!-- TOPBAR -->
+
+        <header class="h-20 border-b border-[#2f3445] px-8 flex items-center justify-between">
+
+            <div>
+
+                <h2 class="text-2xl font-bold">
+
+                    Dashboard
+
+                </h2>
+
+                <div class="text-sm text-gray-400">
+
+                    Monitorización de servicios corporativos
+
+                </div>
+
+            </div>
+
+            <div class="flex items-center gap-4">
+
+                <!-- KQL -->
+
+                <div class="bg-[#1d2130] border border-[#2f3445] rounded-lg px-4 py-2 flex items-center gap-3 w-[520px]">
+
+                    <i class="fa-solid fa-magnifying-glass text-gray-500"></i>
+
+                    <span class="text-sm text-blue-400 font-mono">
+
+                        service.name : "gateway"
+
+                    </span>
+
+                </div>
+
+                <button class="bg-[#006DE4] hover:bg-blue-600 px-5 py-2 rounded-lg">
+
+                    Últimos 15 min
+
+                </button>
+
+            </div>
+
+        </header>
+
+        <!-- CONTENT -->
+
+        <section class="flex-1 overflow-auto p-8">
+
+            <!-- KPI -->
+
+            <div class="grid grid-cols-4 gap-6 mb-8">
+
+                <div class="card h-36 placeholder"></div>
+
+                <div class="card h-36 placeholder"></div>
+
+                <div class="card h-36 placeholder"></div>
+
+                <div class="card h-36 placeholder"></div>
+
+            </div>
+
+            <!-- GRAPH -->
+
+            <div class="card h-96 mb-8 placeholder"></div>
+
+            <!-- LOWER -->
+
+            <div class="grid grid-cols-3 gap-6">
+
+                <div class="card h-96 placeholder"></div>
+
+                <div class="card h-96 placeholder"></div>
+
+                <div class="card h-96 placeholder"></div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+
+</html>
