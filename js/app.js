@@ -134,7 +134,7 @@ grid.appendChild(card);
 // ======================================================
 
 const system = {
-
+const alerts = [];
     users: 340,
 
     throughput: 1450,
@@ -326,6 +326,49 @@ function renderKPIs(){
 
 }
 // ======================================================
+// ALERTAS
+// ======================================================
+
+function addAlert(level, message){
+
+    const time = new Date().toLocaleTimeString("es-ES");
+
+    alerts.unshift({
+        time,
+        level,
+        message
+    });
+
+    if(alerts.length > 8){
+        alerts.pop();
+    }
+
+}
+function renderAlerts(){
+
+    const panel =
+        document.getElementById("alertsPanel");
+
+    panel.innerHTML = "";
+
+    alerts.forEach(alert=>{
+
+        panel.innerHTML += `
+        <div class="flex justify-between border-b border-gray-700 py-1">
+
+            <span>${alert.time}</span>
+
+            <span>${alert.level}</span>
+
+            <span>${alert.message}</span>
+
+        </div>
+        `;
+
+    });
+
+}
+// ======================================================
 // CHART.JS
 // ======================================================
 
@@ -433,8 +476,25 @@ const latencyChart = new Chart(ctx,{
 function tick(){
 
     simulateSystem();
+if(system.cpu>70){
 
+    addAlert("🟡 WARNING","CPU elevada");
+
+}
+
+if(system.latency>170){
+
+    addAlert("🔴 CRITICAL","Latencia alta");
+
+}
+
+if(system.errorRate>0.30){
+
+    addAlert("🔴 ERROR","Muchos errores");
+
+}
     renderKPIs();
+    renderAlerts();
 
 }
 
