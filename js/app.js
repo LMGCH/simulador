@@ -424,25 +424,23 @@ function renderAlerts(){
     const panel =
         document.getElementById("alertsPanel");
 
-function renderAlerts(){
-
-    const panel = document.getElementById("alertsPanel");
-
-    let html = "";
+    panel.innerHTML = "";
 
     alerts.forEach(alert=>{
 
-        html += `
+        panel.innerHTML += `
         <div class="flex justify-between border-b border-gray-700 py-1">
+
             <span>${alert.time}</span>
+
             <span>${alert.level}</span>
+
             <span>${alert.message}</span>
-        </div>`;
+
+        </div>
+        `;
+
     });
-
-    panel.innerHTML = html;
-
-}
 
 }
 // ======================================================
