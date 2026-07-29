@@ -122,3 +122,50 @@
     color:#33d17a !important;
 
 }
+/* =====================================================
+   FOOTER
+===================================================== */
+
+.app-footer{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:12px;
+
+    margin:30px 0 15px;
+
+    font-size:13px;
+
+    color:#8d98aa;
+
+}
+
+.footer-title{
+
+    font-weight:600;
+
+    color:#d8dee9;
+
+}
+
+.footer-version{
+
+    color:#6fb3ff;
+
+}
+
+.footer-engine{
+
+    color:#33d17a;
+
+}
+
+.footer-separator{
+
+    opacity:.45;
+
+}
