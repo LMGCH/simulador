@@ -604,3 +604,60 @@ if(system.errorRate>0.30){
 tick();
 
 setInterval(tick,2000);
+
+// ======================================================
+// MOTOR DE SIMULACIÓN Y ACTUALIZACIÓN EN TIEMPO REAL
+// ======================================================
+
+// 1. Variable de control global (Sincronizada con tus botones)
+let currentSimulationMode = 'NORMAL'; 
+
+// 2. Generador de latencia según el estado del sistema
+function generateLatencyData(mode) {
+    const randomFactor = Math.random();
+    
+    switch (mode) {
+        case 'HIGH_LOAD':
+            // Latencia alta y sostenida (Rango: 160ms - 195ms)
+            return Math.floor(randomFactor * (195 - 160 + 1)) + 160;
+            
+        case 'INCIDENT':
+            // Picos críticos que rompen el umbral (Rango: 200ms - 235ms)
+            return Math.floor(randomFactor * (235 - 200 + 1)) + 200;
+            
+        case 'NORMAL':
+        default:
+            // Comportamiento óptimo y estable (Rango: 110ms - 130ms)
+            return Math.floor(randomFactor * (130 - 110 + 1)) + 110;
+    }
+}
+
+// 3. Temporizador (Intervalo de actualización cada 1 segundo)
+setInterval(() => {
+    // Generar el nuevo punto de datos basado en el modo actual
+    const nextLatencyValue = generateLatencyData(currentSimulationMode);
+    
+    // Obtener la referencia de datos de la gráfica
+    const datasetData = latencyChart.data.datasets[0].data;
+    
+    // Efecto "scroll": Añadir dato al final y remover el primero
+    datasetData.push(nextLatencyValue);
+    datasetData.shift();
+    
+    // 4. Adaptación visual de colores según la gravedad del entorno
+    if (currentSimulationMode === 'INCIDENT') {
+        latencyChart.data.datasets[0].borderColor = "#ef4444";       // Rojo Tailwind
+        latencyChart.data.datasets[0].backgroundColor = "rgba(239, 68, 68, 0.15)";
+    } else if (currentSimulationMode === 'HIGH_LOAD') {
+        latencyChart.data.datasets[0].borderColor = "#f59e0b";       // Ámbar Tailwind
+        latencyChart.data.datasets[0].backgroundColor = "rgba(245, 158, 11, 0.15)";
+    } else {
+        latencyChart.data.datasets[0].borderColor = "#3b82f6";       // Azul original (Tu diseño)
+        latencyChart.data.datasets[0].backgroundColor = "rgba(59, 130, 246, 0.15)";
+    }
+    
+    // Forzar el redibujado instantáneo de la gráfica
+    latencyChart.update();
+    
+}, 1000);
+
