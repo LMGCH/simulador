@@ -150,6 +150,67 @@ const alerts = [];
 const latencyHistory = new Array(60).fill(system.latency);
 
 // ======================================================
+// SIMULATION ENGINE
+// ======================================================
+
+const simulation = {
+
+    currentScenario: "NORMAL",
+
+    tick: 0,
+
+    scenarioDuration: 30
+
+};
+
+const scenarios = {
+
+    NORMAL: {
+        users: {
+            min: 300,
+            max: 380
+        }
+    },
+
+    HIGH_TRAFFIC: {
+        users: {
+            min: 600,
+            max: 850
+        }
+    },
+
+    PAYMENTS_DOWN: {
+        users: {
+            min: 450,
+            max: 650
+        }
+    },
+
+    DDOS: {
+        users: {
+            min: 1000,
+            max: 1200
+        }
+    },
+
+    RECOVERY: {
+        users: {
+            min: 350,
+            max: 500
+        }
+    }
+
+};
+
+function randomBetween(min,max){
+
+    return Math.floor(
+        Math.random()*(max-min+1)
+    )+min;
+
+}
+
+// ======================================================
 // MOTOR DE SIMULACIÓN
 // ======================================================
 
@@ -198,6 +259,43 @@ function simulateSystem(){
         Math.max(0,(system.cpu-65))*0.015;
 
 }
+
+<!-- =====================================================
+     DEVELOPER PANEL
+====================================================== -->
+
+<section class="developer-panel">
+
+    <div class="panel-title">
+        Simulation Engine
+    </div>
+
+    <div class="panel-content">
+
+        <label for="scenarioSelect">
+            Scenario
+        </label>
+
+        <select id="scenarioSelect">
+
+            <option value="NORMAL">
+                NORMAL
+            </option>
+
+            <option value="HIGH_LOAD">
+                HIGH LOAD
+            </option>
+
+            <option value="INCIDENT">
+                INCIDENT
+            </option>
+
+        </select>
+
+    </div>
+
+</section>
+
 // ======================================================
 // RENDERIZADO DE KPIs
 // ======================================================
