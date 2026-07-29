@@ -128,6 +128,17 @@ style="background:${m.color}22;color:${m.color}">
 grid.appendChild(card);
 
 });
+// ======================================================
+// CACHE DE ELEMENTOS DEL DOM
+// ======================================================
+
+const metricElements = metrics.map((_, index) =>
+    document.getElementById("metric" + index)
+);
+
+const trendElements = metrics.map((_, index) =>
+    document.getElementById("trend" + index)
+);
 
 // ======================================================
 // ESTADO GLOBAL
@@ -297,14 +308,13 @@ function renderKPIs(){
 
         }
 
-        document.getElementById("metric"+index).innerHTML =
+        metricElements[index].innerHTML =
+        value +
+        " <span class='text-lg text-gray-400'>" +
+        m.unit +
+        "</span>";
 
-            value +
-            " <span class='text-lg text-gray-400'>" +
-            m.unit +
-            "</span>";
-
-        const trend = document.getElementById("trend"+index);
+        const trend = trendElements[index];
 
         switch(index){
 
@@ -414,23 +424,25 @@ function renderAlerts(){
     const panel =
         document.getElementById("alertsPanel");
 
-    panel.innerHTML = "";
+function renderAlerts(){
+
+    const panel = document.getElementById("alertsPanel");
+
+    let html = "";
 
     alerts.forEach(alert=>{
 
-        panel.innerHTML += `
+        html += `
         <div class="flex justify-between border-b border-gray-700 py-1">
-
             <span>${alert.time}</span>
-
             <span>${alert.level}</span>
-
             <span>${alert.message}</span>
-
-        </div>
-        `;
-
+        </div>`;
     });
+
+    panel.innerHTML = html;
+
+}
 
 }
 // ======================================================
