@@ -227,49 +227,56 @@ function randomBetween(min,max){
 
 function simulateSystem(){
 
-    // Variación de usuarios
+    // 1. Variación de usuarios base + modificador por escenario
+    let userDelta = Math.floor(Math.random() * 41) - 20;
+    
+    if (currentSimulationMode === 'HIGH_LOAD') {
+        // En carga alta forzamos a que entren muchos más usuarios por ciclo
+        userDelta += 60; 
+    } else if (currentSimulationMode === 'INCIDENT') {
+        // En un incidente técnico, el tráfico web suele caer o fluctuar bruscamente
+        userDelta -= 40; 
+    }
 
-    system.users += Math.floor(Math.random()*41)-20;
+    system.users += userDelta;
     system.users = Math.max(100, Math.min(1200, system.users));
 
-    // Throughput
+    // 2. Throughput base
+    system.throughput = Math.round(800 + system.users * 2.2);
 
-    system.throughput = Math.round(
-        800 + system.users * 2.2
-    );
+    // 3. CPU (Fórmula base + anomalías por escenario)
+    let cpuAnomalies = 0;
+    if (currentSimulationMode === 'HIGH_LOAD') {
+        cpuAnomalies = 25; // La alta concurrencia estresa la CPU
+    } else if (currentSimulationMode === 'INCIDENT') {
+        cpuAnomalies = 50; // Un proceso bloqueado o bucle infinito dispara la CPU al máximo
+    }
 
-    // CPU
+    system.cpu = 18 + (system.throughput / 55) + (Math.random() * 5 - 2) + cpuAnomalies;
+    system.cpu = Math.min(100, Math.max(0, system.cpu)); // Protegemos límites entre 0 y 100
 
-    system.cpu =
-        18 +
-        system.throughput / 55 +
-        (Math.random()*5-2);
-
-    system.cpu = Math.min(100, system.cpu);
-
-    // Memoria
-
-    system.memory =
-        30 +
-        system.cpu * 0.65 +
-        (Math.random()*4-2);
-
+    // 4. Memoria (Hereda el comportamiento de la CPU)
+    system.memory = 30 + (system.cpu * 0.65) + (Math.random() * 4 - 2);
     system.memory = Math.min(95, system.memory);
 
-    // Latencia
+    // 5. Latencia (Fórmula base + penalización crítica por incidente)
+    let latencyPenalty = 0;
+    if (currentSimulationMode === 'INCIDENT') {
+        // En incidente técnico simulamos degradación extrema de la base de datos o microservicios
+        latencyPenalty = 80; 
+    }
+    
+    system.latency = 70 + (system.cpu * 1.25) + (Math.random() * 10) + latencyPenalty;
 
-    system.latency =
-        70 +
-        system.cpu * 1.25 +
-        Math.random()*10;
+    // 6. Error Rate (Fórmula base + inyección forzada en incidente)
+    let errorSpike = 0;
+    if (currentSimulationMode === 'INCIDENT') {
+        errorSpike = 0.35; // Forzamos un 35% de errores directos (ej: fallos de conexión 502/504)
+    }
 
-    // Error Rate
-
-    system.errorRate =
-        0.02 +
-        Math.max(0,(system.cpu-65))*0.015;
-
+    system.errorRate = 0.02 + Math.max(0, (system.cpu - 65)) * 0.015 + errorSpike;
 }
+
 
 // ======================================================
 // DEVELOPER PANEL
