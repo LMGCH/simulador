@@ -227,7 +227,7 @@
             </div>
                 <div class="text-sm text-gray-400">
 
-                    Monitorización de servicios corporativos
+                    Monitorización de servicios municipales
 
                 </div>
 
@@ -269,19 +269,51 @@
         Simulation Engine
     </div>
 
-    <div class="panel-content">
+    <div class="panel-grid">
 
-        <label for="scenarioSelect">
-            Scenario
-        </label>
+        <div class="panel-item">
 
-        <select id="scenarioSelect">
+            <label for="scenarioSelect">Scenario</label>
 
-            <option value="NORMAL">NORMAL</option>
-            <option value="HIGH_LOAD">HIGH LOAD</option>
-            <option value="INCIDENT">INCIDENT</option>
+            <select id="scenarioSelect">
 
-        </select>
+                <option value="NORMAL">NORMAL</option>
+                <option value="HIGH_LOAD">HIGH LOAD</option>
+                <option value="INCIDENT">INCIDENT</option>
+
+            </select>
+
+        </div>
+
+        <div class="panel-item">
+
+            <label>Target Users</label>
+
+            <span id="targetUsers">
+                --
+            </span>
+
+        </div>
+
+        <div class="panel-item">
+
+            <label>Current Users</label>
+
+            <span id="currentUsers">
+                --
+            </span>
+
+        </div>
+
+        <div class="panel-item">
+
+            <label>Engine</label>
+
+            <span class="engine-running">
+                ● Running
+            </span>
+
+        </div>
 
     </div>
 
