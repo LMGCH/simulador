@@ -1,0 +1,37 @@
+.developer-panel{
+
+    background:#1f2937;
+
+    border-radius:12px;
+
+    padding:16px;
+
+    margin-bottom:20px;
+
+}
+
+.panel-title{
+
+    font-weight:bold;
+
+    margin-bottom:12px;
+
+}
+
+.panel-content{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+#scenarioSelect{
+
+    padding:8px 12px;
+
+    border-radius:6px;
+
+}
