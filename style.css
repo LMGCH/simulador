@@ -35,3 +35,90 @@
     border-radius:6px;
 
 }
+/* =====================================================
+   DEVELOPER PANEL
+===================================================== */
+
+.developer-panel{
+
+    background:#202632;
+    border:1px solid #2f3746;
+    border-radius:14px;
+
+    padding:20px;
+
+    margin-bottom:22px;
+
+}
+
+.panel-title{
+
+    font-size:22px;
+    font-weight:600;
+
+    margin-bottom:18px;
+
+}
+
+.panel-grid{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(4,1fr);
+
+    gap:30px;
+
+}
+
+.panel-item{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:8px;
+
+}
+
+.panel-item label{
+
+    font-size:12px;
+
+    text-transform:uppercase;
+
+    letter-spacing:1px;
+
+    color:#8d98aa;
+
+}
+
+.panel-item span{
+
+    font-size:20px;
+
+    font-weight:600;
+
+    color:white;
+
+}
+
+#scenarioSelect{
+
+    background:#1b2130;
+
+    color:white;
+
+    border:1px solid #394152;
+
+    border-radius:8px;
+
+    padding:10px;
+
+}
+
+.engine-running{
+
+    color:#33d17a !important;
+
+}
