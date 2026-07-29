@@ -172,56 +172,39 @@ const simulation = {
 
     tick: 0,
 
+    // Reservado para futuras transiciones automáticas
     scenarioDuration: 30
 
 };
-
+// TODO:
+// Este objeto será sustituido completamente durante la
+// implementación de Simulation Engine v1.
+// Los escenarios pasarán a definir targetUsers en lugar
+// de rangos aleatorios.
 const scenarios = {
 
     NORMAL: {
+
         users: {
+
             min: 300,
+
             max: 380
-        }
-    },
 
-    HIGH_TRAFFIC: {
-        users: {
-            min: 600,
-            max: 850
         }
-    },
 
-    PAYMENTS_DOWN: {
-        users: {
-            min: 450,
-            max: 650
-        }
-    },
-
-    DDOS: {
-        users: {
-            min: 1000,
-            max: 1200
-        }
-    },
-
-    RECOVERY: {
-        users: {
-            min: 350,
-            max: 500
-        }
     }
 
 };
 
-function randomBetween(min,max){
-
-    return Math.floor(
-        Math.random()*(max-min+1)
-    )+min;
-
-}
+// TODO:
+// En Simulation Engine v1 se añadirán:
+//
+// - HIGH_LOAD
+// - INCIDENT
+//
+// La evolución del sistema dejará de depender de valores
+// aleatorios y pasará a utilizar targetUsers.
 
 // ======================================================
 // MOTOR DE SIMULACIÓN
