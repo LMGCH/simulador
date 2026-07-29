@@ -264,37 +264,6 @@ function simulateSystem(){
 // DEVELOPER PANEL
 // ======================================================
 
-<section class="developer-panel">
-
-    <div class="panel-title">
-        Simulation Engine
-    </div>
-
-    <div class="panel-content">
-
-        <label for="scenarioSelect">
-            Scenario
-        </label>
-
-        <select id="scenarioSelect">
-
-            <option value="NORMAL">
-                NORMAL
-            </option>
-
-            <option value="HIGH_LOAD">
-                HIGH LOAD
-            </option>
-
-            <option value="INCIDENT">
-                INCIDENT
-            </option>
-
-        </select>
-
-    </div>
-
-</section>
 
 // ======================================================
 // RENDERIZADO DE KPIs
