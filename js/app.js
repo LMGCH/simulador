@@ -9,6 +9,15 @@
 // ======================================================
 let currentSimulationMode = 'NORMAL'; 
 const timeline = [];
+const eventFlags = {
+
+    cpuHigh:false,
+
+    latencyHigh:false,
+
+    errorHigh:false
+
+};
 const metrics = [
 
 {
@@ -628,9 +637,42 @@ function tick(){
     simulateSystem();
 
     // 2. Evalúa alertas basadas en las nuevas métricas
-    if(system.cpu > 70)      addAlert("🟡 WARNING", "CPU elevada");
-    if(system.latency > 170)  addAlert("🔴 CRITICAL", "Latencia alta");
-    if(system.errorRate > 0.30) addAlert("🔴 ERROR", "Muchos errores");
+
+if(system.cpu > 70){
+
+    if(!eventFlags.cpuHigh){
+
+        eventFlags.cpuHigh = true;
+
+        addAlert("🟡 WARNING", "CPU elevada");
+
+        addTimelineEvent(
+            "🟡",
+            "CPU supera el 70 %"
+        );
+
+    }
+
+}else{
+
+    if(eventFlags.cpuHigh){
+
+        eventFlags.cpuHigh = false;
+
+        addTimelineEvent(
+            "🟢",
+            "CPU vuelve a valores normales"
+        );
+
+    }
+
+}
+
+if(system.latency > 170)
+    addAlert("🔴 CRITICAL", "Latencia alta");
+
+if(system.errorRate > 0.30)
+    addAlert("🔴 ERROR", "Muchos errores");
 
     // 3. Renderiza componentes visuales estáticos
     renderKPIs();
