@@ -370,18 +370,81 @@ system.errorRate =
 // ======================================================
 function simulateServices(){
 
-    Object.values(services).forEach(service=>{
+    Object.entries(services).forEach(([key, service])=>{
+
+        let cpuBase = 15;
+        let latencyBase = 20;
+
+        switch(currentSimulationMode){
+
+            case "NORMAL":
+
+                cpuBase = 15;
+                latencyBase = 20;
+
+                break;
+
+            case "HIGH_LOAD":
+
+                if(key==="gateway" || key==="api"){
+
+                    cpuBase = 70;
+                    latencyBase = 120;
+
+                }else{
+
+                    cpuBase = 30;
+                    latencyBase = 40;
+
+                }
+
+                break;
+
+            case "INCIDENT":
+
+                if(key==="database"){
+
+                    cpuBase = 95;
+                    latencyBase = 280;
+
+                }else if(key==="gateway"){
+
+                    cpuBase = 75;
+                    latencyBase = 180;
+
+                }else{
+
+                    cpuBase = 20;
+                    latencyBase = 30;
+
+                }
+
+                break;
+
+        }
+
+        service.cpu += (cpuBase - service.cpu) * 0.15;
+        service.latency += (latencyBase - service.latency) * 0.15;
 
         service.cpu += Math.random()*4-2;
-        service.latency += Math.random()*6-3;
+        service.latency += Math.random()*8-4;
 
-        service.cpu =
-            Math.max(1,Math.min(100,service.cpu));
+        service.cpu = Math.max(1,Math.min(100,service.cpu));
+        service.latency = Math.max(1,service.latency);
 
-        service.latency =
-            Math.max(1,service.latency);
+        if(service.cpu>85 || service.latency>220){
 
-        service.status="HEALTHY";
+            service.status="CRITICAL";
+
+        }else if(service.cpu>60 || service.latency>120){
+
+            service.status="WARNING";
+
+        }else{
+
+            service.status="HEALTHY";
+
+        }
 
     });
 
