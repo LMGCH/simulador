@@ -9,13 +9,11 @@
 // ======================================================
 let currentSimulationMode = 'NORMAL'; 
 const timeline = [];
-const eventFlags = {
+const systemState = {
 
-    cpuHigh:false,
-
-    latencyHigh:false,
-
-    errorHigh:false
+    cpuHigh: false,
+    latencyHigh: false,
+    errorHigh: false
 
 };
 const metrics = [
@@ -668,11 +666,65 @@ if(system.cpu > 70){
 
 }
 
-if(system.latency > 170)
-    addAlert("🔴 CRITICAL", "Latencia alta");
+if(system.latency > 170){
 
-if(system.errorRate > 0.30)
-    addAlert("🔴 ERROR", "Muchos errores");
+    if(!eventFlags.latencyHigh){
+
+        eventFlags.latencyHigh = true;
+
+        addAlert("🔴 CRITICAL", "Latencia alta");
+
+        addTimelineEvent(
+            "🔴",
+            "Latencia supera los 170 ms"
+        );
+
+    }
+
+}else{
+
+    if(eventFlags.latencyHigh){
+
+        eventFlags.latencyHigh = false;
+
+        addTimelineEvent(
+            "🟢",
+            "Latencia vuelve a valores normales"
+        );
+
+    }
+
+}
+
+if(system.errorRate > 0.30){
+
+    if(!eventFlags.errorHigh){
+
+        eventFlags.errorHigh = true;
+
+        addAlert("🔴 ERROR", "Muchos errores");
+
+        addTimelineEvent(
+            "🔴",
+            "La tasa de errores supera el 30 %"
+        );
+
+    }
+
+}else{
+
+    if(eventFlags.errorHigh){
+
+        eventFlags.errorHigh = false;
+
+        addTimelineEvent(
+            "🟢",
+            "La tasa de errores vuelve a la normalidad"
+        );
+
+    }
+
+}
 
     // 3. Renderiza componentes visuales estáticos
     renderKPIs();
