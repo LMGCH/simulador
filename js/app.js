@@ -638,9 +638,9 @@ function tick(){
 
 if(system.cpu > 70){
 
-    if(!eventFlags.cpuHigh){
+    if(!systemState.cpuHigh){
 
-        eventFlags.cpuHigh = true;
+        systemState.cpuHigh = true;
 
         addAlert("🟡 WARNING", "CPU elevada");
 
@@ -653,9 +653,9 @@ if(system.cpu > 70){
 
 }else{
 
-    if(eventFlags.cpuHigh){
+    if(systemState.cpuHigh){
 
-        eventFlags.cpuHigh = false;
+        systemState.cpuHigh = false;
 
         addTimelineEvent(
             "🟢",
@@ -668,9 +668,9 @@ if(system.cpu > 70){
 
 if(system.latency > 170){
 
-    if(!eventFlags.latencyHigh){
+    if(!systemState.latencyHigh){
 
-        eventFlags.latencyHigh = true;
+        systemState.latencyHigh = true;
 
         addAlert("🔴 CRITICAL", "Latencia alta");
 
@@ -683,9 +683,9 @@ if(system.latency > 170){
 
 }else{
 
-    if(eventFlags.latencyHigh){
+    if(systemState.latencyHigh){
 
-        eventFlags.latencyHigh = false;
+        systemState.latencyHigh = false;
 
         addTimelineEvent(
             "🟢",
@@ -698,9 +698,9 @@ if(system.latency > 170){
 
 if(system.errorRate > 0.30){
 
-    if(!eventFlags.errorHigh){
+    if(!systemState.errorHigh){
 
-        eventFlags.errorHigh = true;
+        systemState.errorHigh = true;
 
         addAlert("🔴 ERROR", "Muchos errores");
 
@@ -713,9 +713,9 @@ if(system.errorRate > 0.30){
 
 }else{
 
-    if(eventFlags.errorHigh){
+    if(systemState.errorHigh){
 
-        eventFlags.errorHigh = false;
+        systemState.errorHigh = false;
 
         addTimelineEvent(
             "🟢",
