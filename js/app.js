@@ -164,7 +164,7 @@ const system = {
 };
 
 // Historial de alertas
-const alerts = [];
+
 
 // Histórico de latencia para la gráfica
 const latencyHistory = new Array(60).fill(system.latency);
@@ -438,7 +438,7 @@ function renderKPIs(){
 // ======================================================
 // ALERTAS
 // ======================================================
-
+/*
 function addAlert(level, message){
 
     const time = new Date().toLocaleTimeString("es-ES");
@@ -454,6 +454,7 @@ function addAlert(level, message){
     }
 
 }
+*/
 function addTimelineEvent(icon, message){
 
     const now = new Date();
@@ -482,23 +483,77 @@ function addTimelineEvent(icon, message){
 }
 function renderAlerts(){
 
-    const panel =
-        document.getElementById("alertsPanel");
+    const panel = document.getElementById("alertsPanel");
+
+    if(!panel) return;
 
     panel.innerHTML = "";
+
+    const alerts = [];
+
+    if(systemState.cpuHigh){
+
+        alerts.push({
+            icon:"🟡",
+            title:"WARNING",
+            text:"CPU elevada"
+        });
+
+    }
+
+    if(systemState.latencyHigh){
+
+        alerts.push({
+            icon:"🔴",
+            title:"CRITICAL",
+            text:"Latencia alta"
+        });
+
+    }
+
+    if(systemState.errorHigh){
+
+        alerts.push({
+            icon:"🔴",
+            title:"ERROR",
+            text:"Muchos errores"
+        });
+
+    }
+
+    if(alerts.length===0){
+
+        panel.innerHTML = `
+            <div class="text-green-400 font-semibold">
+                ✅ No hay alertas activas
+            </div>
+        `;
+
+        return;
+
+    }
 
     alerts.forEach(alert=>{
 
         panel.innerHTML += `
-        <div class="flex justify-between border-b border-gray-700 py-1">
 
-            <span>${alert.time}</span>
+            <div class="flex justify-between items-center border-b border-slate-700 py-2">
 
-            <span>${alert.level}</span>
+                <div>
 
-            <span>${alert.message}</span>
+                    ${alert.icon}
+                    <strong>${alert.title}</strong>
 
-        </div>
+                </div>
+
+                <div>
+
+                    ${alert.text}
+
+                </div>
+
+            </div>
+
         `;
 
     });
@@ -642,8 +697,7 @@ if(system.cpu > 70){
 
         systemState.cpuHigh = true;
 
-        addAlert("🟡 WARNING", "CPU elevada");
-
+        
         addTimelineEvent(
             "🟡",
             "CPU supera el 70 %"
@@ -655,14 +709,12 @@ if(system.cpu > 70){
 
     if(systemState.cpuHigh){
 
-        systemState.cpuHigh = false;
+    systemState.cpuHigh = false; 
 
-        addTimelineEvent(
-            "🟢",
-            "CPU vuelve a valores normales"
-        );
-
-    }
+    addTimelineEvent(
+        "🟢",
+        "CPU vuelve a valores normales"
+    );
 
 }
 
