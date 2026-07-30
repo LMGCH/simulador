@@ -1,7 +1,7 @@
 // ======================================================
 // OBSERVABILITY LABS
 // Dashboard de Observabilidad (Demo)
-// Versión: 0.2
+// Versión: 0.5 estable
 // Autor: Luis Miguel Galacho + ChatGPT
 // ======================================================
 // ======================================================
@@ -682,113 +682,9 @@ function renderSimulationPanel(){
         system.users;
 
 }
-// ======================================================
-// BUCLE PRINCIPAL DE INICIALIZACIÓN
-// ======================================================
-function tick(){
-    // 1. Calcula las nuevas métricas (Modifica el objeto global 'system')
-    simulateSystem();
-
-    // 2. Evalúa alertas basadas en las nuevas métricas
-
-if(system.cpu > 70){
-
-    if(!systemState.cpuHigh){
-
-        systemState.cpuHigh = true;
-
-        
-        addTimelineEvent(
-            "🟡",
-            "CPU supera el 70 %"
-        );
-
-    }
-
-}else{
-
-    if(systemState.cpuHigh){
-
-    systemState.cpuHigh = false; 
-
-    addTimelineEvent(
-        "🟢",
-        "CPU vuelve a valores normales"
-    );
-
-}
-
-if(system.latency > 170){
-
-    if(!systemState.latencyHigh){
-
-        systemState.latencyHigh = true;
-
-        addAlert("🔴 CRITICAL", "Latencia alta");
-
-        addTimelineEvent(
-            "🔴",
-            "Latencia supera los 170 ms"
-        );
-
-    }
-
-}else{
-
-    if(systemState.latencyHigh){
-
-        systemState.latencyHigh = false;
-
-        addTimelineEvent(
-            "🟢",
-            "Latencia vuelve a valores normales"
-        );
-
-    }
-
-}
-
-if(system.errorRate > 0.30){
-
-    if(!systemState.errorHigh){
-
-        systemState.errorHigh = true;
-
-        addAlert("🔴 ERROR", "Muchos errores");
-
-        addTimelineEvent(
-            "🔴",
-            "La tasa de errores supera el 30 %"
-        );
-
-    }
-
-}else{
-
-    if(systemState.errorHigh){
-
-        systemState.errorHigh = false;
-
-        addTimelineEvent(
-            "🟢",
-            "La tasa de errores vuelve a la normalidad"
-        );
-
-    }
-
-}
-
-    // 3. Renderiza componentes visuales estáticos
-    renderKPIs();
-    renderSimulationPanel();
-    renderAlerts();
-    renderTimeline();
-    renderSystemStatus();
-
-    // 4. Actualiza la gráfica con la latencia real generada
-    updateLatencyChartVisuals();
-}
-
+    // =====================================================
+    // INICIO MOTOR SIMULACIÓN
+    // =====================================================
 addTimelineEvent(
     "🚀",
     "Simulation Engine iniciado"
@@ -796,6 +692,128 @@ addTimelineEvent(
 // Ejecución inicial y temporizador unificado cada 2 segundos
 tick();
 setInterval(tick, 2000);
+
+function evaluateSystemState(){
+
+    // =====================================================
+    // CPU
+    // =====================================================
+
+    if(system.cpu > 70){
+
+        if(!systemState.cpuHigh){
+
+            systemState.cpuHigh = true;
+
+            addTimelineEvent(
+                "🟡",
+                "CPU supera el 70 %"
+            );
+
+        }
+
+    }else{
+
+        if(systemState.cpuHigh){
+
+            systemState.cpuHigh = false;
+
+            addTimelineEvent(
+                "🟢",
+                "CPU vuelve a valores normales"
+            );
+
+        }
+
+    }
+
+    // =====================================================
+    // LATENCIA
+    // =====================================================
+
+    if(system.latency > 170){
+
+        if(!systemState.latencyHigh){
+
+            systemState.latencyHigh = true;
+
+            addTimelineEvent(
+                "🔴",
+                "Latencia supera los 170 ms"
+            );
+
+        }
+
+    }else{
+
+        if(systemState.latencyHigh){
+
+            systemState.latencyHigh = false;
+
+            addTimelineEvent(
+                "🟢",
+                "Latencia vuelve a valores normales"
+            );
+
+        }
+
+    }
+
+    // =====================================================
+    // ERROR RATE
+    // =====================================================
+
+    if(system.errorRate > 0.30){
+
+        if(!systemState.errorHigh){
+
+            systemState.errorHigh = true;
+
+            addTimelineEvent(
+                "🔴",
+                "La tasa de errores supera el 30 %"
+            );
+
+        }
+
+    }else{
+
+        if(systemState.errorHigh){
+
+            systemState.errorHigh = false;
+
+            addTimelineEvent(
+                "🟢",
+                "La tasa de errores vuelve a la normalidad"
+            );
+
+        }
+
+    }
+
+}
+// ======================================================
+// BUCLE PRINCIPAL DE INICIALIZACIÓN
+// ======================================================
+function tick(){
+
+    // Calcula el nuevo estado del sistema
+    simulateSystem();
+
+    // Evalúa umbrales y genera eventos
+    evaluateSystemState();
+
+    // Actualiza la interfaz
+    renderKPIs();
+    renderSimulationPanel();
+    renderAlerts();
+    renderTimeline();
+    renderSystemStatus();
+
+    // Actualiza la gráfica
+    updateLatencyChartVisuals();
+
+}
 
 // ======================================================
 // CONTROL DE ESCENARIOS (SELECT HTML)
@@ -819,9 +837,11 @@ document.getElementById('scenarioSelect').addEventListener('change', (event) => 
     console.log(
         `Escenario: ${selectedScenario} | Target: ${simulation.targetUsers}`
     );
-addTimelineEvent(
-    "🎯",
-    `Escenario ${selectedScenario} activado (Objetivo: ${simulation.targetUsers} usuarios)`
-);
+
+    addTimelineEvent(
+        "🎯",
+        `Escenario ${selectedScenario} activado (Objetivo: ${simulation.targetUsers} usuarios)`
+    );
+
 });
 
