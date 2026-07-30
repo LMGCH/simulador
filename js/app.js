@@ -265,9 +265,9 @@ system.users = Math.max(
     // 3. CPU (Fórmula base + anomalías por escenario)
     let cpuAnomalies = 0;
     if (currentSimulationMode === 'HIGH_LOAD') {
-        cpuAnomalies = 25; // La alta concurrencia estresa la CPU
+        cpuAnomalies = 10; // La alta concurrencia estresa la CPU
     } else if (currentSimulationMode === 'INCIDENT') {
-        cpuAnomalies = 50; // Un proceso bloqueado o bucle infinito dispara la CPU al máximo
+        cpuAnomalies = 20; // Un proceso bloqueado o bucle infinito dispara la CPU al máximo
     }
 
     system.cpu = 18 + (system.throughput / 55) + (Math.random() * 5 - 2) + cpuAnomalies;
