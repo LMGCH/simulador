@@ -16,6 +16,67 @@ const systemState = {
     errorHigh: false
 
 };
+// ======================================================
+// SERVICE ENGINE
+// ======================================================
+
+const services = {
+
+    gateway: {
+
+        name: "Gateway API",
+        status: "HEALTHY",
+        cpu: 15,
+        latency: 35
+
+    },
+
+    api: {
+
+        name: "Application API",
+        status: "HEALTHY",
+        cpu: 12,
+        latency: 28
+
+    },
+
+    database: {
+
+        name: "Database",
+        status: "HEALTHY",
+        cpu: 18,
+        latency: 12
+
+    },
+
+    redis: {
+
+        name: "Redis Cache",
+        status: "HEALTHY",
+        cpu: 8,
+        latency: 2
+
+    },
+
+    identity: {
+
+        name: "Identity Service",
+        status: "HEALTHY",
+        cpu: 10,
+        latency: 20
+
+    },
+
+    notifications: {
+
+        name: "Notification Service",
+        status: "HEALTHY",
+        cpu: 6,
+        latency: 15
+
+    }
+
+};
 const metrics = [
 
 {
@@ -304,12 +365,27 @@ system.errorRate =
     Math.max(0, (system.cpu - 65)) * 0.015 +
     scenario.errorOffset;
 }
-
-
 // ======================================================
-// DEVELOPER PANEL
+// MICROSERVICIOS PANEL
 // ======================================================
+function simulateServices(){
 
+    Object.values(services).forEach(service=>{
+
+        service.cpu += Math.random()*4-2;
+        service.latency += Math.random()*6-3;
+
+        service.cpu =
+            Math.max(1,Math.min(100,service.cpu));
+
+        service.latency =
+            Math.max(1,service.latency);
+
+        service.status="HEALTHY";
+
+    });
+
+}
 
 // ======================================================
 // RENDERIZADO DE KPIs
@@ -799,6 +875,8 @@ function tick(){
 
     // Calcula el nuevo estado del sistema
     simulateSystem();
+
+    simulateServices();
 
     // Evalúa umbrales y genera eventos
     evaluateSystemState();
