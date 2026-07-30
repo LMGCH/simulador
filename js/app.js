@@ -535,7 +535,18 @@ function updateLatencyChartVisuals() {
     
     latencyChart.update();
 }
+// ======================================================
+// RENDERIZACIÓN DEL PANEL
+// ======================================================
+function renderSimulationPanel(){
 
+    document.getElementById("targetUsers").textContent =
+        simulation.targetUsers;
+
+    document.getElementById("currentUsers").textContent =
+        system.users;
+
+}
 // ======================================================
 // BUCLE PRINCIPAL DE INICIALIZACIÓN
 // ======================================================
@@ -550,6 +561,7 @@ function tick(){
 
     // 3. Renderiza componentes visuales estáticos
     renderKPIs();
+    renderSimulationPanel();
     renderAlerts();
     renderSystemStatus();
 
