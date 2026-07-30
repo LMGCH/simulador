@@ -169,30 +169,45 @@ const latencyHistory = new Array(60).fill(system.latency);
 const simulation = {
 
     currentScenario: "NORMAL",
+    
+    targetUsers: 500,
 
+    currentUsers: 500,
+
+    engineState: "Running",
+    
     tick: 0,
 
     // Reservado para futuras transiciones automáticas
     scenarioDuration: 30
 
 };
-// TODO:
-// Este objeto será sustituido completamente durante la
-// implementación de Simulation Engine v1.
-// Los escenarios pasarán a definir targetUsers en lugar
-// de rangos aleatorios.
+// ======================================================
+// SCENARIOS
+// ======================================================
+//
+// Cada escenario define el objetivo de usuarios del
+// Simulation Engine.
+//
+// El motor será el encargado de aproximarse
+// progresivamente a ese objetivo.
+//
+// Las métricas (CPU, memoria, latencia, etc.) serán
+// consecuencia del número de usuarios y no se definirán
+// directamente aquí.
+//
 const scenarios = {
 
     NORMAL: {
+        targetUsers: 500
+    },
 
-        users: {
+    HIGH_LOAD: {
+        targetUsers: 1500
+    },
 
-            min: 300,
-
-            max: 380
-
-        }
-
+    INCIDENT: {
+        targetUsers: 900
     }
 
 };
@@ -215,10 +230,10 @@ function simulateSystem(){
     // 1. Variación de usuarios base + modificador por escenario
     let userDelta = Math.floor(Math.random() * 41) - 20;
     
-    if (currentSimulationMode === 'HIGH_LOAD') {
+    if (simulation.currentScenario === 'HIGH_LOAD') {
         // En carga alta forzamos a que entren muchos más usuarios por ciclo
         userDelta += 60; 
-    } else if (currentSimulationMode === 'INCIDENT') {
+    } else if (simulation.currentScenario === 'INCIDENT') {
         // En un incidente técnico, el tráfico web suele caer o fluctuar bruscamente
         userDelta -= 40; 
     }
@@ -231,9 +246,9 @@ function simulateSystem(){
 
     // 3. CPU (Fórmula base + anomalías por escenario)
     let cpuAnomalies = 0;
-    if (currentSimulationMode === 'HIGH_LOAD') {
+    if (simulation.currentScenario === 'HIGH_LOAD') {
         cpuAnomalies = 25; // La alta concurrencia estresa la CPU
-    } else if (currentSimulationMode === 'INCIDENT') {
+    } else if (simulation.currentScenario === 'INCIDENT') {
         cpuAnomalies = 50; // Un proceso bloqueado o bucle infinito dispara la CPU al máximo
     }
 
@@ -246,7 +261,7 @@ function simulateSystem(){
 
     // 5. Latencia (Fórmula base + penalización crítica por incidente)
     let latencyPenalty = 0;
-    if (currentSimulationMode === 'INCIDENT') {
+    if (simulation.currentScenario === 'INCIDENT') {
         // En incidente técnico simulamos degradación extrema de la base de datos o microservicios
         latencyPenalty = 80; 
     }
@@ -255,7 +270,7 @@ function simulateSystem(){
 
     // 6. Error Rate (Fórmula base + inyección forzada en incidente)
     let errorSpike = 0;
-    if (currentSimulationMode === 'INCIDENT') {
+    if (simulation.currentScenario === 'INCIDENT') {
         errorSpike = 0.35; // Forzamos un 35% de errores directos (ej: fallos de conexión 502/504)
     }
 
