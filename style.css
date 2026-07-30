@@ -136,3 +136,72 @@
     opacity:.45;
 
 }
+/* =====================================================
+   EVENT TIMELINE
+===================================================== */
+
+.timeline-container{
+
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+
+    max-height:300px;
+    overflow-y:auto;
+
+}
+
+.timeline-item{
+
+    display:flex;
+    gap:12px;
+
+    padding:10px;
+
+    background:#111827;
+
+    border-left:3px solid #3b82f6;
+
+    border-radius:8px;
+
+    animation:fadeIn .25s ease;
+
+}
+
+.timeline-time{
+
+    min-width:75px;
+
+    color:#94a3b8;
+
+    font-size:.80rem;
+
+    font-family:monospace;
+
+}
+
+.timeline-message{
+
+    color:#e5e7eb;
+
+    flex:1;
+
+}
+
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+        transform:translateY(-5px);
+
+    }
+
+    to{
+
+        opacity:1;
+        transform:translateY(0);
+
+    }
+
+}
