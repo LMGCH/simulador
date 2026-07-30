@@ -236,19 +236,28 @@ const scenarios = {
 
 function simulateSystem(){
 
-    // 1. Variación de usuarios base + modificador por escenario
-    let userDelta = Math.floor(Math.random() * 41) - 20;
-    
-    if (currentSimulationMode === 'HIGH_LOAD') {
-        // En carga alta forzamos a que entren muchos más usuarios por ciclo
-        userDelta += 60; 
-    } else if (currentSimulationMode === 'INCIDENT') {
-        // En un incidente técnico, el tráfico web suele caer o fluctuar bruscamente
-        userDelta -= 40; 
-    }
+    // 1. Evolución progresiva de usuarios hacia el objetivo del escenario
+const difference = simulation.targetUsers - system.users;
 
-    system.users += userDelta;
-    system.users = Math.max(100, Math.min(1200, system.users));
+// El sistema avanza aproximadamente un 10 % hacia el objetivo
+let userDelta = difference * 0.10;
+
+// Añadimos una pequeña variación natural
+userDelta += Math.random() * 10 - 5;
+
+// Evitamos movimientos inferiores a un usuario
+userDelta = Math.round(userDelta);
+
+system.users += userDelta;
+
+// Respetamos los límites definidos para el escenario
+system.users = Math.max(
+    scenarios[currentSimulationMode].users.min,
+    Math.min(
+        scenarios[currentSimulationMode].users.max,
+        system.users
+    )
+);
 
     // 2. Throughput base
     system.throughput = Math.round(800 + system.users * 2.2);
