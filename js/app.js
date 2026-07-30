@@ -638,11 +638,8 @@ document.getElementById('scenarioSelect').addEventListener('change', (event) => 
         `Escenario: ${selectedScenario} | Target: ${simulation.targetUsers}`
     );
 addTimelineEvent(
-
     "🎯",
-
-    `Escenario cambiado a ${selectedScenario}`
-
+    `Escenario ${selectedScenario} activado (Objetivo: ${simulation.targetUsers} usuarios)`
 );
 });
 
