@@ -199,15 +199,24 @@ const simulation = {
 const scenarios = {
 
     NORMAL: {
-        targetUsers: 500
+        users: {
+            min: 300,
+            max: 380
+        }
     },
 
     HIGH_LOAD: {
-        targetUsers: 1500
+        users: {
+            min: 900,
+            max: 1200
+        }
     },
 
     INCIDENT: {
-        targetUsers: 900
+        users: {
+            min: 150,
+            max: 300
+        }
     }
 
 };
