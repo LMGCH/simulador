@@ -8,7 +8,7 @@
 // CONFIGURACIÓN
 // ======================================================
 let currentSimulationMode = 'NORMAL'; 
-
+const timeline = [];
 const metrics = [
 
 {
@@ -447,6 +447,32 @@ function addAlert(level, message){
     }
 
 }
+function addTimelineEvent(icon, message){
+
+    const now = new Date();
+
+    const time =
+        now.toLocaleTimeString("es-ES",{
+            hour:"2-digit",
+            minute:"2-digit",
+            second:"2-digit"
+        });
+
+    timeline.unshift({
+
+        time,
+        icon,
+        message
+
+    });
+
+    if(timeline.length>12){
+
+        timeline.pop();
+
+    }
+
+}
 function renderAlerts(){
 
     const panel =
@@ -581,6 +607,10 @@ function tick(){
     updateLatencyChartVisuals();
 }
 
+addTimelineEvent(
+    "🚀",
+    "Simulation Engine iniciado"
+);
 // Ejecución inicial y temporizador unificado cada 2 segundos
 tick();
 setInterval(tick, 2000);
@@ -607,6 +637,12 @@ document.getElementById('scenarioSelect').addEventListener('change', (event) => 
     console.log(
         `Escenario: ${selectedScenario} | Target: ${simulation.targetUsers}`
     );
+addTimelineEvent(
 
+    "🎯",
+
+    `Escenario cambiado a ${selectedScenario}`
+
+);
 });
 
