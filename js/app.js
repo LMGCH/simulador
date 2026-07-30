@@ -198,44 +198,53 @@ const simulation = {
 //
 const scenarios = {
 
-    NORMAL: {
-        users: {
-            min: 300,
-            max: 380
-        }
+    NORMAL:{
+
+        users:{
+            min:300,
+            max:380
+        },
+
+        cpuOffset:0,
+        latencyOffset:0,
+        errorOffset:0
+
     },
 
-    HIGH_LOAD: {
-        users: {
-            min: 900,
-            max: 1200
-        }
+    HIGH_LOAD:{
+
+        users:{
+            min:900,
+            max:1200
+        },
+
+        cpuOffset:10,
+        latencyOffset:0,
+        errorOffset:0
+
     },
 
-    INCIDENT: {
-        users: {
-            min: 150,
-            max: 300
-        }
+    INCIDENT:{
+
+        users:{
+            min:150,
+            max:300
+        },
+
+        cpuOffset:40,
+        latencyOffset:80,
+        errorOffset:0.35
+
     }
 
 };
-
-// TODO:
-// En Simulation Engine v1 se añadirán:
-//
-// - HIGH_LOAD
-// - INCIDENT
-//
-// La evolución del sistema dejará de depender de valores
-// aleatorios y pasará a utilizar targetUsers.
 
 // ======================================================
 // MOTOR DE SIMULACIÓN
 // ======================================================
 
 function simulateSystem(){
-
+    const scenario = scenarios[currentSimulationMode];
     // 1. Evolución progresiva de usuarios hacia el objetivo del escenario
 const difference = simulation.targetUsers - system.users;
 
@@ -263,14 +272,12 @@ system.users = Math.max(
     system.throughput = Math.round(800 + system.users * 2.2);
 
     // 3. CPU (Fórmula base + anomalías por escenario)
-    let cpuAnomalies = 0;
-    if (currentSimulationMode === 'HIGH_LOAD') {
-        cpuAnomalies = 10; // La alta concurrencia estresa la CPU
-    } else if (currentSimulationMode === 'INCIDENT') {
-        cpuAnomalies = 40; // Un proceso bloqueado o bucle infinito dispara la CPU al máximo
-    }
-
-    system.cpu = 18 + (system.throughput / 55) + (Math.random() * 5 - 2) + cpuAnomalies;
+    system.cpu =
+    18 +
+    (system.throughput / 55) +
+    (Math.random() * 5 - 2) +
+    scenario.cpuOffset;
+    
     system.cpu = Math.min(100, Math.max(0, system.cpu)); // Protegemos límites entre 0 y 100
 
     // 4. Memoria (Hereda el comportamiento de la CPU)
@@ -278,21 +285,17 @@ system.users = Math.max(
     system.memory = Math.min(95, system.memory);
 
     // 5. Latencia (Fórmula base + penalización crítica por incidente)
-    let latencyPenalty = 0;
-    if (currentSimulationMode === 'INCIDENT') {
-        // En incidente técnico simulamos degradación extrema de la base de datos o microservicios
-        latencyPenalty = 80; 
-    }
-    
-    system.latency = 70 + (system.cpu * 1.25) + (Math.random() * 10) + latencyPenalty;
+system.latency =
+    70 +
+    (system.cpu * 1.25) +
+    (Math.random() * 10) +
+    scenario.latencyOffset;
 
     // 6. Error Rate (Fórmula base + inyección forzada en incidente)
-    let errorSpike = 0;
-    if (currentSimulationMode === 'INCIDENT') {
-        errorSpike = 0.35; // Forzamos un 35% de errores directos (ej: fallos de conexión 502/504)
-    }
-
-    system.errorRate = 0.02 + Math.max(0, (system.cpu - 65)) * 0.015 + errorSpike;
+system.errorRate =
+    0.02 +
+    Math.max(0, (system.cpu - 65)) * 0.015 +
+    scenario.errorOffset;
 }
 
 
