@@ -497,6 +497,41 @@ function renderAlerts(){
     });
 
 }
+
+function renderTimeline(){
+
+    const container = document.getElementById("timelineContainer");
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    timeline.forEach(event=>{
+
+        container.innerHTML += `
+
+            <div class="timeline-item">
+
+                <div class="timeline-time">
+
+                    ${event.time}
+
+                </div>
+
+                <div class="timeline-message">
+
+                    ${event.icon} ${event.message}
+
+                </div>
+
+            </div>
+
+        `;
+
+    });
+
+}
+
 // ======================================================
 // CHART.JS
 // ======================================================
@@ -601,6 +636,7 @@ function tick(){
     renderKPIs();
     renderSimulationPanel();
     renderAlerts();
+    renderTimeline();
     renderSystemStatus();
 
     // 4. Actualiza la gráfica con la latencia real generada
