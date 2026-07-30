@@ -577,19 +577,24 @@ setInterval(tick, 2000);
 // CONTROL DE ESCENARIOS (SELECT HTML)
 // ======================================================
 
-// Escuchamos cuando el usuario cambia la opción del desplegable
 document.getElementById('scenarioSelect').addEventListener('change', (event) => {
-    
-    // Capturamos el valor seleccionado ("NORMAL", "HIGH_LOAD" o "INCIDENT")
-    const selectedScenario = event.target.value;
-    
-    // Sincronizamos la variable global de tu simulador
-    currentSimulationMode = selectedScenario;
-    
-    // Opcional: Si tu función simulateSystem() depende directamente de otra variable global
-    // llamada por ejemplo 'system.currentMode', puedes asignarla aquí también:
-    // system.currentMode = selectedScenario;
 
-    console.log(`Escenario cambiado a: ${selectedScenario}`);
+    const selectedScenario = event.target.value;
+
+    currentSimulationMode = selectedScenario;
+
+    simulation.currentScenario = selectedScenario;
+
+    const scenario = scenarios[selectedScenario];
+
+    simulation.targetUsers =
+        Math.round(
+            (scenario.users.min + scenario.users.max) / 2
+        );
+
+    console.log(
+        `Escenario: ${selectedScenario} | Target: ${simulation.targetUsers}`
+    );
+
 });
 
