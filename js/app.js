@@ -7,7 +7,7 @@
 // ======================================================
 // CONFIGURACIÓN
 // ======================================================
-let currentSimulationMode = 'NORMAL'; 
+let simulation.currentScenario = 'NORMAL'; 
 
 const metrics = [
 
@@ -239,10 +239,10 @@ function simulateSystem(){
     // 1. Variación de usuarios base + modificador por escenario
     let userDelta = Math.floor(Math.random() * 41) - 20;
     
-    if (currentSimulationMode === 'HIGH_LOAD') {
+    if (simulation.currentScenario === 'HIGH_LOAD') {
         // En carga alta forzamos a que entren muchos más usuarios por ciclo
         userDelta += 60; 
-    } else if (currentSimulationMode === 'INCIDENT') {
+    } else if (simulation.currentScenario === 'INCIDENT') {
         // En un incidente técnico, el tráfico web suele caer o fluctuar bruscamente
         userDelta -= 40; 
     }
@@ -255,9 +255,9 @@ function simulateSystem(){
 
     // 3. CPU (Fórmula base + anomalías por escenario)
     let cpuAnomalies = 0;
-    if (currentSimulationMode === 'HIGH_LOAD') {
+    if (simulation.currentScenario === 'HIGH_LOAD') {
         cpuAnomalies = 25; // La alta concurrencia estresa la CPU
-    } else if (currentSimulationMode === 'INCIDENT') {
+    } else if (simulation.currentScenario === 'INCIDENT') {
         cpuAnomalies = 50; // Un proceso bloqueado o bucle infinito dispara la CPU al máximo
     }
 
@@ -270,7 +270,7 @@ function simulateSystem(){
 
     // 5. Latencia (Fórmula base + penalización crítica por incidente)
     let latencyPenalty = 0;
-    if (currentSimulationMode === 'INCIDENT') {
+    if (simulation.currentScenario === 'INCIDENT') {
         // En incidente técnico simulamos degradación extrema de la base de datos o microservicios
         latencyPenalty = 80; 
     }
@@ -279,7 +279,7 @@ function simulateSystem(){
 
     // 6. Error Rate (Fórmula base + inyección forzada en incidente)
     let errorSpike = 0;
-    if (currentSimulationMode === 'INCIDENT') {
+    if (simulation.currentScenario === 'INCIDENT') {
         errorSpike = 0.35; // Forzamos un 35% de errores directos (ej: fallos de conexión 502/504)
     }
 
@@ -572,7 +572,7 @@ document.getElementById('scenarioSelect').addEventListener('change', (event) => 
     const selectedScenario = event.target.value;
     
     // Sincronizamos la variable global de tu simulador
-    currentSimulationMode = selectedScenario;
+    simulation.currentScenario = selectedScenario;
     
     // Opcional: Si tu función simulateSystem() depende directamente de otra variable global
     // llamada por ejemplo 'system.currentMode', puedes asignarla aquí también:
