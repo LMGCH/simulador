@@ -670,6 +670,70 @@ function renderTimeline(){
 
 }
 
+function renderServicesMap(){
+
+    const container = document.getElementById("servicesMap");
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    Object.values(services).forEach(service=>{
+
+        let statusColor = "🟢";
+
+        if(service.status === "WARNING"){
+
+            statusColor = "🟡";
+
+        }else if(service.status === "CRITICAL"){
+
+            statusColor = "🔴";
+
+        }
+
+        container.innerHTML += `
+
+            <div class="bg-[#252b3d] rounded-lg p-3 border border-[#394056]">
+
+                <div class="flex justify-between items-center mb-2">
+
+                    <strong>
+
+                        ${statusColor} ${service.name}
+
+                    </strong>
+
+                    <span class="text-xs text-gray-400">
+
+                        ${service.status}
+
+                    </span>
+
+                </div>
+
+                <div class="text-sm text-gray-300">
+
+                    CPU:
+                    <strong>${service.cpu.toFixed(0)}%</strong>
+
+                </div>
+
+                <div class="text-sm text-gray-300">
+
+                    Latencia:
+                    <strong>${service.latency.toFixed(0)} ms</strong>
+
+                </div>
+
+            </div>
+
+        `;
+
+    });
+
+}
+
 // ======================================================
 // CHART.JS
 // ======================================================
@@ -886,6 +950,7 @@ function tick(){
     renderSimulationPanel();
     renderAlerts();
     renderTimeline();
+    renderServicesMap();
     renderSystemStatus();
 
     // Actualiza la gráfica
