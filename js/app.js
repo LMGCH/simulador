@@ -1,7 +1,7 @@
 // ======================================================
 // OBSERVABILITY LABS
 // Dashboard de Observabilidad (Demo)
-// Versión: 0.5 estable
+// Versión: 0.7.1 
 // Autor: Luis Miguel Galacho + ChatGPT
 // ======================================================
 // ======================================================
@@ -501,22 +501,7 @@ case "INCIDENT":
         service.cpu += Math.random()*4-2;
         service.latency += Math.random()*8-4;
 
-        service.cpu = Math.max(1,Math.min(100,service.cpu));
-        service.latency = Math.max(1,service.latency);
-
-        if(service.cpu > 85 || service.latency > 220){
-
-    service.status = "CRITICAL";
-
-}else if(service.cpu > 60 || service.latency > 120){
-
-    service.status = "WARNING";
-
-}else{
-
-    service.status = "HEALTHY";
-
-}
+updateServiceStatus(service);
 });
     // ==========================================
     // SEGUNDA FASE: PROPAGACIÓN DE DEPENDENCIAS
