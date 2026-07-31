@@ -474,6 +474,8 @@ case "INCIDENT":
     // SEGUNDA FASE: PROPAGACIÓN DE DEPENDENCIAS
     // ==========================================
 
+for(let iteration = 0; iteration < 2; iteration++){
+
     Object.values(services).forEach(service => {
 
         service.dependsOn.forEach(dependency => {
@@ -482,17 +484,22 @@ case "INCIDENT":
 
             if(parent.status === "CRITICAL"){
 
-                service.latency += 40;
-                service.cpu += 8;
+                service.latency += 20;
+                service.cpu += 4;
 
             }else if(parent.status === "WARNING"){
 
-                service.latency += 20;
-                service.cpu += 4;
+                service.latency += 10;
+                service.cpu += 2;
 
             }
 
         });
+
+    });
+
+    // Recalcular estados tras cada pasada
+    Object.values(services).forEach(service => {
 
         service.cpu = Math.min(100, service.cpu);
 
