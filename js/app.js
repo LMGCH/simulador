@@ -1,7 +1,7 @@
 // ======================================================
 // OBSERVABILITY LABS
 // Dashboard de Observabilidad (Demo)
-// Versión: 0.7.2 
+// Versión: 0.8.1 
 // Autor: Luis Miguel Galacho + ChatGPT
 // ======================================================
 // ======================================================
@@ -463,76 +463,26 @@ function updateServiceStatus(service){
 // ======================================================
 function simulateBaseServices(){
 
+    const serviceScenario =
+        scenarios[currentSimulationMode].services;
+
     Object.entries(services).forEach(([key, service]) => {
 
-        let cpuBase = 15;
-        let latencyBase = 20;
+        const config = serviceScenario[key];
 
-        switch(currentSimulationMode){
+        if(!config) return;
 
-            case "NORMAL":
+        const cpuBase = config.cpu;
+        const latencyBase = config.latency;
 
-                cpuBase = 15;
-                latencyBase = 20;
-                break;
+        // Aproximación progresiva al objetivo
+        service.cpu +=
+            (cpuBase - service.cpu) * 0.15;
 
-            case "HIGH_LOAD":
+        service.latency +=
+            (latencyBase - service.latency) * 0.15;
 
-                if(key === "gateway" || key === "api"){
-
-                    cpuBase = 70;
-                    latencyBase = 120;
-
-                }else{
-
-                    cpuBase = 30;
-                    latencyBase = 40;
-
-                }
-
-                break;
-
-            case "INCIDENT":
-
-                if(key === "database"){
-
-                    cpuBase = 95;
-                    latencyBase = 280;
-
-                }else if(key === "gateway"){
-
-                    cpuBase = 75;
-                    latencyBase = 180;
-
-                }else if(key === "api"){
-
-                    cpuBase = 60;
-                    latencyBase = 140;
-
-                }else if(key === "identity"){
-
-                    cpuBase = 40;
-                    latencyBase = 80;
-
-                }else if(key === "redis"){
-
-                    cpuBase = 35;
-                    latencyBase = 25;
-
-                }else if(key === "notifications"){
-
-                    cpuBase = 30;
-                    latencyBase = 60;
-
-                }
-
-                break;
-
-        }
-
-        service.cpu += (cpuBase - service.cpu) * 0.15;
-        service.latency += (latencyBase - service.latency) * 0.15;
-
+        // Pequeña variación natural
         service.cpu += Math.random() * 4 - 2;
         service.latency += Math.random() * 8 - 4;
 
