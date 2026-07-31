@@ -299,9 +299,9 @@ const scenarios = {
             max:300
         },
 
-        cpuOffset:40,
-        latencyOffset:80,
-        errorOffset:0.35
+        cpuOffset:30,
+        latencyOffset:60,
+        errorOffset:0.30
 
     }
 
@@ -317,10 +317,10 @@ function simulateSystem(){
 const difference = simulation.targetUsers - system.users;
 
 // El sistema avanza aproximadamente un 10 % hacia el objetivo
-let userDelta = difference * 0.10;
+let userDelta = difference * 0.05;
 
 // Añadimos una pequeña variación natural
-userDelta += Math.random() * 10 - 5;
+userDelta += Math.random() * 6 - 3;
 
 // Evitamos movimientos inferiores a un usuario
 userDelta = Math.round(userDelta);
@@ -337,20 +337,31 @@ system.users = Math.max(
 );
 
     // 2. Throughput base
-    system.throughput = Math.round(800 + system.users * 2.2);
+    system.throughput =
+    Math.round(
+        800 +
+        system.users * 2.15 +
+        (Math.random()*60-30)
+    );
 
     // 3. CPU (Fórmula base + anomalías por escenario)
     system.cpu =
-    18 +
-    (system.throughput / 55) +
+    16 +
+    (system.throughput / 28) +
     (Math.random() * 5 - 2) +
     scenario.cpuOffset;
     
     system.cpu = Math.min(100, Math.max(0, system.cpu)); // Protegemos límites entre 0 y 100
 
-    // 4. Memoria (Hereda el comportamiento de la CPU)
-    system.memory = 30 + (system.cpu * 0.65) + (Math.random() * 4 - 2);
-    system.memory = Math.min(95, system.memory);
+    // 4. Memoria (Depende de usuarios y CPU)
+system.memory =
+    35 +
+    (system.users / 45) +
+    (system.cpu * 0.35) +
+    (Math.random() * 3 - 1.5);
+
+// Limitamos el valor
+system.memory = Math.min(95, Math.max(20, system.memory));
 
     // 5. Latencia (Fórmula base + penalización crítica por incidente)
 system.latency =
@@ -359,12 +370,15 @@ system.latency =
     (Math.random() * 10) +
     scenario.latencyOffset;
 
-    // 6. Error Rate (Fórmula base + inyección forzada en incidente)
+    // 6. Error Rate (Comienza a crecer solo con alta saturación)
 system.errorRate =
-    0.02 +
-    Math.max(0, (system.cpu - 65)) * 0.015 +
+    0.02 +                                  // Error base del sistema
+    Math.max(0, (system.cpu - 80)) * 0.008 + // Solo aumenta a partir del 80 % de CPU
+    (Math.random() * 0.01) +                 // Pequeña variación natural
     scenario.errorOffset;
-}
+
+// Evitamos valores negativos
+system.errorRate = Math.max(0, system.errorRate);
 // ======================================================
 // MICROSERVICIOS PANEL
 // ======================================================
@@ -400,26 +414,41 @@ function simulateServices(){
 
                 break;
 
-            case "INCIDENT":
+case "INCIDENT":
 
-                if(key==="database"){
+    if (key === "database") {
 
-                    cpuBase = 95;
-                    latencyBase = 280;
+        cpuBase = 95;
+        latencyBase = 280;
 
-                }else if(key==="gateway"){
+    } else if (key === "gateway") {
 
-                    cpuBase = 75;
-                    latencyBase = 180;
+        cpuBase = 75;
+        latencyBase = 180;
 
-                }else{
+    } else if (key === "api") {
 
-                    cpuBase = 20;
-                    latencyBase = 30;
+        cpuBase = 60;
+        latencyBase = 140;
 
-                }
+    } else if (key === "identity") {
 
-                break;
+        cpuBase = 40;
+        latencyBase = 80;
+
+    } else if (key === "redis") {
+
+        cpuBase = 35;
+        latencyBase = 25;
+
+    } else if (key === "notifications") {
+
+        cpuBase = 30;
+        latencyBase = 60;
+
+    }
+
+    break;
 
         }
 
