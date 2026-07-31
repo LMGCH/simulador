@@ -512,6 +512,39 @@ function simulateServices(){
 
 }
 // ======================================================
+// BASE SERVICES SIMULATION ENGINE
+// ======================================================
+
+function simulateBaseServices(){
+
+    const serviceScenario =
+        scenarios[currentSimulationMode].services;
+
+    Object.entries(services).forEach(([key, service]) => {
+
+        const config = serviceScenario[key];
+
+        if(!config){
+            return;
+        }
+
+        const cpuBase = config.cpu;
+        const latencyBase = config.latency;
+
+        // Aproximación progresiva al objetivo
+        service.cpu += (cpuBase - service.cpu) * 0.15;
+        service.latency += (latencyBase - service.latency) * 0.15;
+
+        // Variación natural
+        service.cpu += Math.random() * 4 - 2;
+        service.latency += Math.random() * 8 - 4;
+
+        updateServiceStatus(service);
+
+    });
+
+}
+// ======================================================
 // DEPENDENCY PROPAGATION ENGINE
 // ======================================================
 function propagateDependencies(){
