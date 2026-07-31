@@ -482,17 +482,23 @@ for(let iteration = 0; iteration < 2; iteration++){
 
             const parent = services[dependency];
 
-            if(parent.status === "CRITICAL"){
+// ==========================================
+// PROPAGACIÓN PROPORCIONAL
+// ==========================================
 
-                service.latency += 20;
-                service.cpu += 4;
+if(parent.status !== "HEALTHY"){
 
-            }else if(parent.status === "WARNING"){
+    // La carga heredada depende del estado real del servicio padre
+    const cpuImpact =
+        (parent.cpu - 60) * 0.08;
 
-                service.latency += 10;
-                service.cpu += 2;
+    const latencyImpact =
+        (parent.latency - 100) * 0.06;
 
-            }
+    service.cpu += Math.max(0, cpuImpact);
+    service.latency += Math.max(0, latencyImpact);
+
+}
 
         });
 
