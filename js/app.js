@@ -421,13 +421,12 @@ function updateServiceStatus(service){
     }
 
 }
-
 // ======================================================
-// MICROSERVICIOS PANEL
+// BASE SERVICES SIMULATION ENGINE
 // ======================================================
-function simulateServices(){
+function simulateBaseServices(){
 
-    Object.entries(services).forEach(([key, service])=>{
+    Object.entries(services).forEach(([key, service]) => {
 
         let cpuBase = 15;
         let latencyBase = 20;
@@ -438,12 +437,11 @@ function simulateServices(){
 
                 cpuBase = 15;
                 latencyBase = 20;
-
                 break;
 
             case "HIGH_LOAD":
 
-                if(key==="gateway" || key==="api"){
+                if(key === "gateway" || key === "api"){
 
                     cpuBase = 70;
                     latencyBase = 120;
@@ -457,52 +455,61 @@ function simulateServices(){
 
                 break;
 
-case "INCIDENT":
+            case "INCIDENT":
 
-    if (key === "database") {
+                if(key === "database"){
 
-        cpuBase = 95;
-        latencyBase = 280;
+                    cpuBase = 95;
+                    latencyBase = 280;
 
-    } else if (key === "gateway") {
+                }else if(key === "gateway"){
 
-        cpuBase = 75;
-        latencyBase = 180;
+                    cpuBase = 75;
+                    latencyBase = 180;
 
-    } else if (key === "api") {
+                }else if(key === "api"){
 
-        cpuBase = 60;
-        latencyBase = 140;
+                    cpuBase = 60;
+                    latencyBase = 140;
 
-    } else if (key === "identity") {
+                }else if(key === "identity"){
 
-        cpuBase = 40;
-        latencyBase = 80;
+                    cpuBase = 40;
+                    latencyBase = 80;
 
-    } else if (key === "redis") {
+                }else if(key === "redis"){
 
-        cpuBase = 35;
-        latencyBase = 25;
+                    cpuBase = 35;
+                    latencyBase = 25;
 
-    } else if (key === "notifications") {
+                }else if(key === "notifications"){
 
-        cpuBase = 30;
-        latencyBase = 60;
+                    cpuBase = 30;
+                    latencyBase = 60;
 
-    }
+                }
 
-    break;
+                break;
 
         }
 
         service.cpu += (cpuBase - service.cpu) * 0.15;
         service.latency += (latencyBase - service.latency) * 0.15;
 
-        service.cpu += Math.random()*4-2;
-        service.latency += Math.random()*8-4;
+        service.cpu += Math.random() * 4 - 2;
+        service.latency += Math.random() * 8 - 4;
 
-updateServiceStatus(service);
-});
+        updateServiceStatus(service);
+
+    });
+
+}
+// ======================================================
+// MICROSERVICIOS PANEL
+// ======================================================
+function simulateServices(){
+
+    simulateBaseServices();
     // ==========================================
     // SEGUNDA FASE: PROPAGACIÓN DE DEPENDENCIAS
     // ==========================================
