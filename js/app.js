@@ -346,9 +346,9 @@ system.users = Math.max(
 
     // 3. CPU (Fórmula base + anomalías por escenario)
     system.cpu =
-    16 +
-    (system.throughput / 28) +
-    (Math.random() * 5 - 2) +
+    12 +
+    (system.throughput / 40) +
+    (Math.random() * 4 - 2) +
     scenario.cpuOffset;
     
     system.cpu = Math.min(100, Math.max(0, system.cpu)); // Protegemos límites entre 0 y 100
