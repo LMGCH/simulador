@@ -248,58 +248,94 @@ const simulation = {
 // SCENARIOS
 // ======================================================
 //
-// Cada escenario define el objetivo de usuarios del
-// Simulation Engine.
+// Cada escenario define el comportamiento global del
+// sistema durante la simulación.
 //
-// El motor será el encargado de aproximarse
-// progresivamente a ese objetivo.
+// Incluye:
 //
-// Las métricas (CPU, memoria, latencia, etc.) serán
-// consecuencia del número de usuarios y no se definirán
-// directamente aquí.
+// • Rango objetivo de usuarios.
+// • Ajustes sobre las métricas principales.
+// • Comportamiento base de los microservicios.
+//
+// Los distintos motores de simulación consultan esta
+// configuración para calcular la evolución del sistema,
+// evitando reglas específicas para cada escenario.
 //
 const scenarios = {
 
-    NORMAL:{
+NORMAL:{
 
-        users:{
-            min:300,
-            max:380
-        },
-
-        cpuOffset:0,
-        latencyOffset:0,
-        errorOffset:0
-
+    users:{
+        min:300,
+        max:380
     },
 
-    HIGH_LOAD:{
+    cpuOffset:0,
+    latencyOffset:0,
+    errorOffset:0,
 
-        users:{
-            min:900,
-            max:1200
-        },
+    services:{
 
-        cpuOffset:10,
-        latencyOffset:0,
-        errorOffset:0
-
-    },
-
-    INCIDENT:{
-
-        users:{
-            min:150,
-            max:300
-        },
-
-        cpuOffset:30,
-        latencyOffset:60,
-        errorOffset:0.30
+        gateway:{cpu:15, latency:20},
+        api:{cpu:15, latency:20},
+        database:{cpu:15, latency:20},
+        redis:{cpu:15, latency:20},
+        identity:{cpu:15, latency:20},
+        notifications:{cpu:15, latency:20}
 
     }
 
-};
+},
+
+HIGH_LOAD:{
+
+    users:{
+        min:900,
+        max:1200
+    },
+
+    cpuOffset:10,
+    latencyOffset:0,
+    errorOffset:0,
+
+    services:{
+
+        gateway:{cpu:70, latency:120},
+        api:{cpu:70, latency:120},
+        database:{cpu:30, latency:40},
+        redis:{cpu:30, latency:40},
+        identity:{cpu:30, latency:40},
+        notifications:{cpu:30, latency:40}
+
+    }
+
+},
+
+    INCIDENT:{
+
+    users:{
+        min:150,
+        max:300
+    },
+
+    cpuOffset:30,
+    latencyOffset:60,
+    errorOffset:0.30,
+
+    services:{
+
+        gateway:{cpu:75, latency:180},
+        api:{cpu:60, latency:140},
+        database:{cpu:95, latency:280},
+        redis:{cpu:35, latency:25},
+        identity:{cpu:40, latency:80},
+        notifications:{cpu:30, latency:60}
+
+    }
+
+}  // ← Cierra INCIDENT
+
+}; // ← Cierra el objeto scenarios
 
 // ======================================================
 // MOTOR DE SIMULACIÓN
