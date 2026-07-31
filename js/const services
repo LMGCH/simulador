@@ -16,6 +16,27 @@ const systemState = {
     errorHigh: false
 
 };
+
+// ======================================================
+// SERVICE TOPOLOGY
+// ======================================================
+
+const serviceTopology = {
+
+    gateway:["api"],
+
+    api:["database"],
+
+    database:[],
+
+    redis:[],
+
+    identity:[],
+
+    notifications:["api"]
+
+};
+
 // ======================================================
 // SERVICE ENGINE
 // ======================================================
@@ -338,6 +359,36 @@ HIGH_LOAD:{
 }; // ← Cierra el objeto scenarios
 
 // ======================================================
+// THRESHOLDS
+// ======================================================
+
+const thresholds = {
+
+    services:{
+
+        warning:{
+            cpu:60,
+            latency:120
+        },
+
+        critical:{
+            cpu:85,
+            latency:220
+        }
+
+    },
+
+    system:{
+
+        cpu:70,
+        latency:170,
+        errorRate:0.30
+
+    }
+
+};
+
+// ======================================================
 // MOTOR DE SIMULACIÓN
 // ======================================================
 
@@ -414,16 +465,32 @@ system.errorRate = Math.max(0, system.errorRate);
 // ======================================================
 // SERVICE STATUS ENGINE
 // ======================================================
+
 function updateServiceStatus(service){
 
-    service.cpu = Math.max(1, Math.min(100, service.cpu));
-    service.latency = Math.max(1, service.latency);
+    service.cpu =
+        Math.max(1, Math.min(100, service.cpu));
 
-    if(service.cpu > 85 || service.latency > 220){
+    service.latency =
+        Math.max(1, service.latency);
+
+    if(
+
+        service.cpu >= thresholds.services.critical.cpu ||
+
+        service.latency >= thresholds.services.critical.latency
+
+    ){
 
         service.status = "CRITICAL";
 
-    }else if(service.cpu > 60 || service.latency > 120){
+    }else if(
+
+        service.cpu >= thresholds.services.warning.cpu ||
+
+        service.latency >= thresholds.services.warning.latency
+
+    ){
 
         service.status = "WARNING";
 
@@ -432,63 +499,6 @@ function updateServiceStatus(service){
         service.status = "HEALTHY";
 
     }
-
-}
-// ======================================================
-// SERVICE STATUS ENGINE
-// ======================================================
-function updateServiceStatus(service){
-
-    service.cpu = Math.max(1, Math.min(100, service.cpu));
-    service.latency = Math.max(1, service.latency);
-
-    if(service.cpu > 85 || service.latency > 220){
-
-        service.status = "CRITICAL";
-
-    }else if(service.cpu > 60 || service.latency > 120){
-
-        service.status = "WARNING";
-
-    }else{
-
-        service.status = "HEALTHY";
-
-    }
-
-}
-
-// ======================================================
-// BASE SERVICES SIMULATION ENGINE
-// ======================================================
-function simulateBaseServices(){
-
-    const serviceScenario =
-        scenarios[currentSimulationMode].services;
-
-    Object.entries(services).forEach(([key, service]) => {
-
-        const config = serviceScenario[key];
-
-        if(!config) return;
-
-        const cpuBase = config.cpu;
-        const latencyBase = config.latency;
-
-        // Aproximación progresiva al objetivo
-        service.cpu +=
-            (cpuBase - service.cpu) * 0.15;
-
-        service.latency +=
-            (latencyBase - service.latency) * 0.15;
-
-        // Pequeña variación natural
-        service.cpu += Math.random() * 4 - 2;
-        service.latency += Math.random() * 8 - 4;
-
-        updateServiceStatus(service);
-
-    });
 
 }
 // ======================================================
