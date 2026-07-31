@@ -374,6 +374,54 @@ system.errorRate =
 // Evitamos valores negativos
 system.errorRate = Math.max(0, system.errorRate);
 }
+
+// ======================================================
+// SERVICE STATUS ENGINE
+// ======================================================
+function updateServiceStatus(service){
+
+    service.cpu = Math.max(1, Math.min(100, service.cpu));
+    service.latency = Math.max(1, service.latency);
+
+    if(service.cpu > 85 || service.latency > 220){
+
+        service.status = "CRITICAL";
+
+    }else if(service.cpu > 60 || service.latency > 120){
+
+        service.status = "WARNING";
+
+    }else{
+
+        service.status = "HEALTHY";
+
+    }
+
+}
+// ======================================================
+// SERVICE STATUS ENGINE
+// ======================================================
+function updateServiceStatus(service){
+
+    service.cpu = Math.max(1, Math.min(100, service.cpu));
+    service.latency = Math.max(1, service.latency);
+
+    if(service.cpu > 85 || service.latency > 220){
+
+        service.status = "CRITICAL";
+
+    }else if(service.cpu > 60 || service.latency > 120){
+
+        service.status = "WARNING";
+
+    }else{
+
+        service.status = "HEALTHY";
+
+    }
+
+}
+
 // ======================================================
 // MICROSERVICIOS PANEL
 // ======================================================
@@ -504,26 +552,12 @@ if(parent.status !== "HEALTHY"){
 
     });
 
-    // Recalcular estados tras cada pasada
-    Object.values(services).forEach(service => {
+// Recalcular estados tras cada pasada
+Object.values(services).forEach(service => {
 
-        service.cpu = Math.min(100, service.cpu);
+    updateServiceStatus(service);
 
-        if(service.cpu > 85 || service.latency > 220){
-
-            service.status = "CRITICAL";
-
-        }else if(service.cpu > 60 || service.latency > 120){
-
-            service.status = "WARNING";
-
-        }else{
-
-            service.status = "HEALTHY";
-
-        }
-
-    });
+});
 
 }
 }
