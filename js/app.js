@@ -23,57 +23,51 @@ const systemState = {
 const services = {
 
     gateway: {
-
         name: "Gateway API",
         status: "HEALTHY",
         cpu: 15,
-        latency: 35
-
+        latency: 35,
+        dependsOn: ["api"]
     },
 
     api: {
-
         name: "Application API",
         status: "HEALTHY",
         cpu: 12,
-        latency: 28
-
+        latency: 28,
+        dependsOn: ["database", "redis", "identity"]
     },
 
     database: {
-
         name: "Database",
         status: "HEALTHY",
         cpu: 18,
-        latency: 12
-
+        latency: 12,
+        dependsOn: []
     },
 
     redis: {
-
         name: "Redis Cache",
         status: "HEALTHY",
         cpu: 8,
-        latency: 2
-
+        latency: 2,
+        dependsOn: []
     },
 
     identity: {
-
         name: "Identity Service",
         status: "HEALTHY",
         cpu: 10,
-        latency: 20
-
+        latency: 20,
+        dependsOn: []
     },
 
     notifications: {
-
         name: "Notification Service",
         status: "HEALTHY",
         cpu: 6,
-        latency: 15
-
+        latency: 15,
+        dependsOn: ["api"]
     }
 
 };
