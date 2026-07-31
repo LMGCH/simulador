@@ -422,6 +422,47 @@ function updateServiceStatus(service){
 
 }
 // ======================================================
+// SIMULATION SCENARIOS
+// ======================================================
+
+const scenarios = {
+
+    NORMAL:{
+
+        gateway:{cpu:15, latency:20},
+        api:{cpu:15, latency:20},
+        database:{cpu:15, latency:20},
+        redis:{cpu:15, latency:20},
+        identity:{cpu:15, latency:20},
+        notifications:{cpu:15, latency:20}
+
+    },
+
+    HIGH_LOAD:{
+
+        gateway:{cpu:70, latency:120},
+        api:{cpu:70, latency:120},
+        database:{cpu:30, latency:40},
+        redis:{cpu:30, latency:40},
+        identity:{cpu:30, latency:40},
+        notifications:{cpu:30, latency:40}
+
+    },
+
+    INCIDENT:{
+
+        gateway:{cpu:75, latency:180},
+        api:{cpu:60, latency:140},
+        database:{cpu:95, latency:280},
+        redis:{cpu:35, latency:25},
+        identity:{cpu:40, latency:80},
+        notifications:{cpu:30, latency:60}
+
+    }
+
+};
+
+// ======================================================
 // BASE SERVICES SIMULATION ENGINE
 // ======================================================
 function simulateBaseServices(){
