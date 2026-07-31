@@ -469,45 +469,46 @@ case "INCIDENT":
     service.status = "HEALTHY";
 
 }
-
-// ==========================================
-// DEPENDENCY ENGINE
-// ==========================================
-
-service.dependsOn.forEach(dependency => {
-
-    const parent = services[dependency];
-
-    if(parent.status === "CRITICAL"){
-
-        service.latency += 40;
-        service.cpu += 8;
-
-    }else if(parent.status === "WARNING"){
-
-        service.latency += 20;
-        service.cpu += 4;
-
-    }
-
 });
+    // ==========================================
+    // SEGUNDA FASE: PROPAGACIÓN DE DEPENDENCIAS
+    // ==========================================
 
-// Recalculamos el estado después del impacto
-service.cpu = Math.min(100, service.cpu);
+    Object.values(services).forEach(service => {
 
-if(service.cpu > 85 || service.latency > 220){
+        service.dependsOn.forEach(dependency => {
 
-    service.status = "CRITICAL";
+            const parent = services[dependency];
 
-}else if(service.cpu > 60 || service.latency > 120){
+            if(parent.status === "CRITICAL"){
 
-    service.status = "WARNING";
+                service.latency += 40;
+                service.cpu += 8;
 
-}else{
+            }else if(parent.status === "WARNING"){
 
-    service.status = "HEALTHY";
+                service.latency += 20;
+                service.cpu += 4;
 
-}
+            }
+
+        });
+
+        service.cpu = Math.min(100, service.cpu);
+
+        if(service.cpu > 85 || service.latency > 220){
+
+            service.status = "CRITICAL";
+
+        }else if(service.cpu > 60 || service.latency > 120){
+
+            service.status = "WARNING";
+
+        }else{
+
+            service.status = "HEALTHY";
+
+        }
 
     });
 
