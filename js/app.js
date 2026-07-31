@@ -379,6 +379,7 @@ system.errorRate =
 
 // Evitamos valores negativos
 system.errorRate = Math.max(0, system.errorRate);
+}
 // ======================================================
 // MICROSERVICIOS PANEL
 // ======================================================
