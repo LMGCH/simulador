@@ -1,7 +1,7 @@
 // ======================================================
 // OBSERVABILITY LABS
 // Dashboard de Observabilidad (Demo)
-// Versión: 0.7.1 
+// Versión: 0.7.2 
 // Autor: Luis Miguel Galacho + ChatGPT
 // ======================================================
 // ======================================================
@@ -505,53 +505,53 @@ function simulateBaseServices(){
 
 }
 // ======================================================
-// MICROSERVICIOS PANEL
+// SERVICES ENGINE
 // ======================================================
 function simulateServices(){
 
     simulateBaseServices();
-    // ==========================================
-    // SEGUNDA FASE: PROPAGACIÓN DE DEPENDENCIAS
-    // ==========================================
 
-for(let iteration = 0; iteration < 2; iteration++){
-
-    Object.values(services).forEach(service => {
-
-        service.dependsOn.forEach(dependency => {
-
-            const parent = services[dependency];
-
-// ==========================================
-// PROPAGACIÓN PROPORCIONAL
-// ==========================================
-
-if(parent.status !== "HEALTHY"){
-
-    // La carga heredada depende del estado real del servicio padre
-    const cpuImpact =
-        (parent.cpu - 60) * 0.08;
-
-    const latencyImpact =
-        (parent.latency - 100) * 0.06;
-
-    service.cpu += Math.max(0, cpuImpact);
-    service.latency += Math.max(0, latencyImpact);
+    propagateDependencies();
 
 }
+// ======================================================
+// DEPENDENCY PROPAGATION ENGINE
+// ======================================================
+function propagateDependencies(){
+
+    for(let iteration = 0; iteration < 2; iteration++){
+
+        Object.values(services).forEach(service => {
+
+            service.dependsOn.forEach(dependency => {
+
+                const parent = services[dependency];
+
+                if(parent.status !== "HEALTHY"){
+
+                    const cpuImpact =
+                        (parent.cpu - 60) * 0.08;
+
+                    const latencyImpact =
+                        (parent.latency - 100) * 0.06;
+
+                    service.cpu += Math.max(0, cpuImpact);
+                    service.latency += Math.max(0, latencyImpact);
+
+                }
+
+            });
 
         });
 
-    });
+        Object.values(services).forEach(service => {
 
-// Recalcular estados tras cada pasada
-Object.values(services).forEach(service => {
+            updateServiceStatus(service);
 
-    updateServiceStatus(service);
+        });
 
-});
+    }
 
-}
 }
 
 // ======================================================
