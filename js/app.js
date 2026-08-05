@@ -43,54 +43,70 @@ const serviceTopology = {
 
 const services = {
 
-    gateway: {
-        name: "Gateway API",
-        status: "HEALTHY",
-        cpu: 15,
-        latency: 35,
-        dependsOn: ["api"]
-    },
+gateway: {
+    name: "Gateway API",
+    status: "HEALTHY",
 
-    api: {
-        name: "Application API",
-        status: "HEALTHY",
-        cpu: 12,
-        latency: 28,
-        dependsOn: ["database", "redis", "identity"]
-    },
+    cpu: 15,
+    memory: 28,
+    latency: 35,
+
+    requests: 0,
+
+    dependsOn: ["api"]
+},
+
+   api: {
+    name: "Application API",
+    status: "HEALTHY",
+
+    cpu: 12,
+    memory: 32,
+    latency: 28,
+
+    requests: 0,
+
+    dependsOn: ["database", "redis", "identity"]
+},
 
     database: {
-        name: "Database",
-        status: "HEALTHY",
-        cpu: 18,
-        latency: 12,
-        dependsOn: []
-    },
+    name: "Database",
+    status: "HEALTHY",
 
-    redis: {
-        name: "Redis Cache",
-        status: "HEALTHY",
-        cpu: 8,
-        latency: 2,
-        dependsOn: []
-    },
+    cpu: 18,
+    memory: 42,
+    latency: 12,
+
+    requests: 0,
+
+    dependsOn: []
+},
+
+   redis: {
+    name: "Redis Cache",
+    status: "HEALTHY",
+
+    cpu: 8,
+    memory: 18,
+    latency: 2,
+
+    requests: 0,
+
+    dependsOn: []
+},
 
     identity: {
-        name: "Identity Service",
-        status: "HEALTHY",
-        cpu: 10,
-        latency: 20,
-        dependsOn: []
-    },
+    name: "Identity Service",
+    status: "HEALTHY",
 
-    notifications: {
-        name: "Notification Service",
-        status: "HEALTHY",
-        cpu: 6,
-        latency: 15,
-        dependsOn: ["api"]
-    }
+    cpu: 10,
+    memory: 22,
+    latency: 20,
 
+    requests: 0,
+
+    dependsOn: []
+},
 };
 const metrics = [
 
@@ -536,10 +552,36 @@ function simulateBaseServices(){
         service.latency += (latencyBase - service.latency) * 0.15;
 
         // Variación natural
-        service.cpu += Math.random() * 4 - 2;
-        service.latency += Math.random() * 8 - 4;
+service.cpu += Math.random() * 4 - 2;
+service.latency += Math.random() * 8 - 4;
 
-        updateServiceStatus(service);
+// --------------------------------------------------
+// Memoria (depende principalmente de la CPU)
+// --------------------------------------------------
+const targetMemory =
+    18 +
+    (service.cpu * 0.60);
+
+service.memory +=
+    (targetMemory - service.memory) * 0.12;
+
+service.memory +=
+    Math.random() * 2 - 1;
+
+service.memory =
+    Math.max(10, Math.min(95, service.memory));
+
+// --------------------------------------------------
+// Peticiones procesadas por el servicio
+// --------------------------------------------------
+service.requests =
+    Math.round(
+        system.users *
+        (service.cpu / 100) *
+        1.8
+    );
+
+updateServiceStatus(service);
 
     });
 
@@ -911,17 +953,31 @@ function renderServicesMap(){
 
                 <div class="text-sm text-gray-300">
 
-                    CPU:
-                    <strong>${service.cpu.toFixed(0)}%</strong>
+    CPU:
+    <strong>${service.cpu.toFixed(0)}%</strong>
 
-                </div>
+</div>
 
-                <div class="text-sm text-gray-300">
+<div class="text-sm text-gray-300">
 
-                    Latencia:
-                    <strong>${service.latency.toFixed(0)} ms</strong>
+    RAM:
+    <strong>${service.memory.toFixed(0)}%</strong>
 
-                </div>
+</div>
+
+<div class="text-sm text-gray-300">
+
+    Latencia:
+    <strong>${service.latency.toFixed(0)} ms</strong>
+
+</div>
+
+<div class="text-sm text-gray-300">
+
+    Requests:
+    <strong>${service.requests}</strong>
+
+</div>
 
             </div>
 
