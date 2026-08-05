@@ -663,11 +663,17 @@ function propagateDependencies(){
                     service.cpu += Math.max(0, cpuImpact);
                     service.latency += Math.max(0, latencyImpact);
 
-                }
+                // Fatiga propagada por dependencias
+                    const healthImpact =
+                        (100 - parent.healthScore) * 0.08;
 
-            });
+                    service.healthScore -= healthImpact;
 
-        });
+                    service.healthScore =
+                    Math.max(0, Math.min(100, service.healthScore));
+            }
+
+});
 
         Object.values(services).forEach(service => {
 
@@ -974,15 +980,21 @@ function renderServicesMap(){
 
         let statusColor = "🟢";
 
-        if(service.status === "WARNING"){
+if(service.healthScore <= 20){
 
-            statusColor = "🟡";
+    statusColor = "🟡";
 
-        }else if(service.status === "CRITICAL"){
+}
+else if(service.healthScore <= 40){
 
-            statusColor = "🔴";
+    statusColor = "🟠";
 
-        }
+}
+else if(service.healthScore <= 70){
+
+    statusColor = "🔴";
+
+}
 
         container.innerHTML += `
 
@@ -1029,6 +1041,33 @@ function renderServicesMap(){
 
     Requests:
     <strong>${service.requests}</strong>
+
+</div>
+<div class="mt-3">
+
+    <div class="flex justify-between text-xs text-gray-400 mb-1">
+        <span>Health</span>
+        <span>${Math.round(service.healthScore)}%</span>
+    </div>
+
+    <div class="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+
+        <div
+            class="h-2 rounded-full"
+            style="
+                width:${service.healthScore}%;
+                background:${
+                    service.healthScore > 70
+                        ? '#22c55e'
+                        : service.healthScore > 30
+                            ? '#f59e0b'
+                            : '#ef4444'
+                };
+                transition:width .5s ease;
+            ">
+        </div>
+
+    </div>
 
 </div>
 
