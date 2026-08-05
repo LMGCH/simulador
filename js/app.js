@@ -16,7 +16,6 @@ const systemState = {
     errorHigh: false
 
 };
-
 // ======================================================
 // SERVICE TOPOLOGY
 // ======================================================
@@ -120,6 +119,19 @@ gateway: {
     dependsOn: ["api"]
 }
 };
+
+// ======================================================
+// MEMORIA DEL ESTADO DE LOS SERVICIOS
+// ======================================================
+
+const serviceState = {};
+
+Object.keys(services).forEach(key => {
+
+    serviceState[key] = services[key].status;
+
+});
+
 const metrics = [
 
 {
