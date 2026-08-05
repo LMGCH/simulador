@@ -32,7 +32,7 @@ const serviceTopology = {
 
     identity:[],
 
-    notifications:["api"]
+    notifications:["api"],
     healthScore: 100,
     autoHealing: true
 
@@ -54,7 +54,7 @@ gateway: {
 
     requests: 0,
 
-    dependsOn: ["api"]
+    dependsOn: ["api"],
     healthScore: 100,
     autoHealing: true
 },
@@ -69,7 +69,7 @@ gateway: {
 
     requests: 0,
 
-    dependsOn: ["database", "redis", "identity"]
+    dependsOn: ["database", "redis", "identity"],
     healthScore: 100,
     autoHealing: true
 },
@@ -84,7 +84,7 @@ gateway: {
 
     requests: 0,
 
-    dependsOn: []
+    dependsOn: [],
     healthScore: 100,
     autoHealing: true
 },
@@ -99,7 +99,7 @@ gateway: {
 
     requests: 0,
 
-    dependsOn: []
+    dependsOn: [],
     healthScore: 100,
     autoHealing: true
 },
@@ -114,7 +114,7 @@ gateway: {
 
     requests: 0,
 
-    dependsOn: []
+    dependsOn: [],
     healthScore: 100,
     autoHealing: true
 },
@@ -128,7 +128,7 @@ gateway: {
 
     requests: 0,
 
-    dependsOn: ["api"]
+    dependsOn: ["api"],
     healthScore: 100,
     autoHealing: true
 }
