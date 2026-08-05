@@ -515,15 +515,10 @@ system.errorRate =
 // Evitamos valores negativos
 system.errorRate = Math.max(0, system.errorRate);
 }
+// Nueva función 
+function updateServiceHealth(service){
 
-// ======================================================
-// SERVICE STATUS ENGINE
-// ======================================================
-
-function updateServiceStatus(service){
-
-    service.cpu = Math.max(1, Math.min(100, service.cpu));
-    service.latency = Math.max(1, service.latency);
+    let delta = 0;
 
     const critical =
         service.cpu >= thresholds.services.critical.cpu ||
@@ -535,20 +530,29 @@ function updateServiceStatus(service){
 
     if(critical){
 
-        service.healthScore -= 12;
+        delta -= 6;
 
     }else if(warning){
 
-        service.healthScore -= 5;
+        delta -= 2;
 
     }else{
 
-        service.healthScore += 6;
+        delta += 3;
 
     }
 
+    service.healthScore += delta;
+
     service.healthScore =
         Math.max(0, Math.min(100, service.healthScore));
+
+}
+// ======================================================
+// SERVICE STATUS ENGINE
+// ======================================================
+
+function updateServiceStatus(service){
 
     if(service.healthScore <= 30){
 
@@ -634,6 +638,7 @@ service.requests =
         1.8
     );
 
+updateServiceHealth(service);
 updateServiceStatus(service);
 
     });
@@ -665,7 +670,7 @@ function propagateDependencies(){
 
                     // Propagación de la fatiga
                     const healthImpact =
-                        (100 - parent.healthScore) * 0.12;
+                        (100 - parent.healthScore) * 0.05;
 
                     service.healthScore -= healthImpact;
 
@@ -681,6 +686,7 @@ function propagateDependencies(){
 
         Object.values(services).forEach(service => {
 
+            updateServiceHealth(service);
             updateServiceStatus(service);
 
         });
