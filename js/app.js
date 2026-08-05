@@ -520,25 +520,41 @@ function updateServiceHealth(service){
 
     let delta = 0;
 
-    const critical =
-        service.cpu >= thresholds.services.critical.cpu ||
-        service.latency >= thresholds.services.critical.latency;
-
-    const warning =
-        service.cpu >= thresholds.services.warning.cpu ||
-        service.latency >= thresholds.services.warning.latency;
-
-    if(critical){
+    // Penalización por CPU
+    if(service.cpu >= thresholds.services.critical.cpu){
 
         delta -= 6;
 
-    }else if(warning){
+    }else if(service.cpu >= thresholds.services.warning.cpu){
 
         delta -= 2;
 
-    }else{
+    }
 
-        delta += 3;
+    // Penalización por latencia
+    if(service.latency >= thresholds.services.critical.latency){
+
+        delta -= 6;
+
+    }else if(service.latency >= thresholds.services.warning.latency){
+
+        delta -= 2;
+
+    }
+
+    // Penalización por dependencias
+    service.dependsOn.forEach(dep => {
+
+        const parent = services[dep];
+
+        delta -= (100 - parent.healthScore) * 0.05;
+
+    });
+
+    // Recuperación natural
+    if(delta === 0){
+
+        delta = 3;
 
     }
 
@@ -577,6 +593,13 @@ function simulateServices(){
     simulateBaseServices();
 
     propagateDependencies();
+
+    Object.values(services).forEach(service => {
+
+        updateServiceHealth(service);
+        updateServiceStatus(service);
+
+    });
 
     system.services =
         Object.values(services)
@@ -650,48 +673,29 @@ updateServiceStatus(service);
 function propagateDependencies(){
 
     for(let iteration = 0; iteration < 2; iteration++){
+        
+    Object.values(services).forEach(service => {
 
-        Object.values(services).forEach(service => {
+    service.dependsOn.forEach(dependency => {
 
-            service.dependsOn.forEach(dependency => {
+        const parent = services[dependency];
 
-                const parent = services[dependency];
+        if(parent.status !== "HEALTHY"){
 
-                if(parent.status !== "HEALTHY"){
+            const cpuImpact =
+                (parent.cpu - 60) * 0.08;
 
-                    const cpuImpact =
-                        (parent.cpu - 60) * 0.08;
+            const latencyImpact =
+                (parent.latency - 100) * 0.06;
 
-                    const latencyImpact =
-                        (parent.latency - 100) * 0.06;
+            service.cpu += Math.max(0, cpuImpact);
+            service.latency += Math.max(0, latencyImpact);
 
-                    service.cpu += Math.max(0, cpuImpact);
-                    service.latency += Math.max(0, latencyImpact);
+        }
 
-                    // Propagación de la fatiga
-                    const healthImpact =
-                        (100 - parent.healthScore) * 0.05;
+    });
 
-                    service.healthScore -= healthImpact;
-
-                    // Limitar entre 0 y 100
-                    service.healthScore =
-                        Math.max(0, Math.min(100, service.healthScore));
-
-                }
-
-            });
-
-        });
-
-        Object.values(services).forEach(service => {
-
-            updateServiceHealth(service);
-            updateServiceStatus(service);
-
-        });
-
-    }
+});
 
 }
 
