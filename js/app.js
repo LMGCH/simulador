@@ -107,6 +107,18 @@ gateway: {
 
     dependsOn: []
 },
+    notifications: {
+    name: "Notification Service",
+    status: "HEALTHY",
+
+    cpu: 6,
+    memory: 15,
+    latency: 15,
+
+    requests: 0,
+
+    dependsOn: ["api"]
+}
 };
 const metrics = [
 
