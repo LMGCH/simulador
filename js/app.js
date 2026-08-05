@@ -663,17 +663,21 @@ function propagateDependencies(){
                     service.cpu += Math.max(0, cpuImpact);
                     service.latency += Math.max(0, latencyImpact);
 
-                // Fatiga propagada por dependencias
+                    // Propagación de la fatiga
                     const healthImpact =
-                        (100 - parent.healthScore) * 0.08;
+                        (100 - parent.healthScore) * 0.12;
 
                     service.healthScore -= healthImpact;
 
+                    // Limitar entre 0 y 100
                     service.healthScore =
-                    Math.max(0, Math.min(100, service.healthScore));
-            }
+                        Math.max(0, Math.min(100, service.healthScore));
 
-});
+                }
+
+            });
+
+        });
 
         Object.values(services).forEach(service => {
 
