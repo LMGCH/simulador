@@ -33,6 +33,7 @@ const serviceTopology = {
     identity:[],
 
     notifications:["api"]
+    healthScore: 100
 
 };
 
@@ -53,6 +54,7 @@ gateway: {
     requests: 0,
 
     dependsOn: ["api"]
+    healthScore: 100
 },
 
    api: {
@@ -66,6 +68,7 @@ gateway: {
     requests: 0,
 
     dependsOn: ["database", "redis", "identity"]
+    healthScore: 100   
 },
 
     database: {
@@ -79,6 +82,7 @@ gateway: {
     requests: 0,
 
     dependsOn: []
+    healthScore: 100    
 },
 
    redis: {
@@ -92,6 +96,7 @@ gateway: {
     requests: 0,
 
     dependsOn: []
+    healthScore: 100
 },
 
     identity: {
@@ -105,6 +110,7 @@ gateway: {
     requests: 0,
 
     dependsOn: []
+    healthScore: 100
 },
     notifications: {
     name: "Notification Service",
@@ -117,6 +123,7 @@ gateway: {
     requests: 0,
 
     dependsOn: ["api"]
+    healthScore: 100
 }
 };
 
@@ -508,29 +515,39 @@ system.errorRate = Math.max(0, system.errorRate);
 
 function updateServiceStatus(service){
 
-    service.cpu =
-        Math.max(1, Math.min(100, service.cpu));
+    service.cpu = Math.max(1, Math.min(100, service.cpu));
+    service.latency = Math.max(1, service.latency);
 
-    service.latency =
-        Math.max(1, service.latency);
-
-    if(
-
+    const critical =
         service.cpu >= thresholds.services.critical.cpu ||
+        service.latency >= thresholds.services.critical.latency;
 
-        service.latency >= thresholds.services.critical.latency
+    const warning =
+        service.cpu >= thresholds.services.warning.cpu ||
+        service.latency >= thresholds.services.warning.latency;
 
-    ){
+    if(critical){
+
+        service.healthScore -= 12;
+
+    }else if(warning){
+
+        service.healthScore -= 5;
+
+    }else{
+
+        service.healthScore += 6;
+
+    }
+
+    service.healthScore =
+        Math.max(0, Math.min(100, service.healthScore));
+
+    if(service.healthScore <= 30){
 
         service.status = "CRITICAL";
 
-    }else if(
-
-        service.cpu >= thresholds.services.warning.cpu ||
-
-        service.latency >= thresholds.services.warning.latency
-
-    ){
+    }else if(service.healthScore <= 70){
 
         service.status = "WARNING";
 
