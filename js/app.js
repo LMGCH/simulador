@@ -998,7 +998,7 @@ function renderServicesMap(){
 
 if(service.healthScore <= 20){
 
-    statusColor = "🟡";
+    statusColor = "🔴";
 
 }
 else if(service.healthScore <= 40){
@@ -1008,7 +1008,7 @@ else if(service.healthScore <= 40){
 }
 else if(service.healthScore <= 70){
 
-    statusColor = "🔴";
+    statusColor = "🟡";
 
 }
 
