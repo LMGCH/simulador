@@ -264,7 +264,7 @@ const system = {
     memory: 54,
     latency: 118,
     errorRate: 0.05,
-    services: 12
+    services: 0
 };
 
 // Historial de alertas
@@ -537,6 +537,11 @@ function simulateServices(){
     simulateBaseServices();
 
     propagateDependencies();
+
+    system.services =
+        Object.values(services)
+              .filter(service => service.status !== "CRITICAL")
+              .length;
 
 }
 // ======================================================
