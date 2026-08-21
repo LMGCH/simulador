@@ -124,64 +124,71 @@
 
         <!-- MENU -->
 
-        <nav class="flex-1 mt-4 space-y-2 px-3">
+        <nav id="mainNavigation" class="flex-1 mt-4 space-y-2 px-3">
 
-            <div class="menu-item active-menu rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer">
-
+            <div
+                class="menu-item active-menu rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer"
+                data-view="dashboard">
+        
                 <i class="fa-solid fa-chart-line w-5"></i>
-
                 Dashboard
-
+        
             </div>
-
-            <div class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer">
-
+        
+            <div
+                class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer"
+                data-view="apm">
+        
                 <i class="fa-solid fa-heart-pulse w-5"></i>
-
                 APM
-
+        
             </div>
-
-            <div class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer">
-
+        
+            <div
+                class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer"
+                data-view="infrastructure">
+        
                 <i class="fa-solid fa-server w-5"></i>
-
                 Infrastructure
-
+        
             </div>
-
-            <div class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer">
-
+        
+            <div
+                class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer"
+                data-view="services">
+        
                 <i class="fa-solid fa-network-wired w-5"></i>
-
                 Services
-
+        
             </div>
-
-            <div class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer">
-
+        
+            <div
+                class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer"
+                data-view="logs">
+        
                 <i class="fa-solid fa-file-lines w-5"></i>
-
                 Logs
-
+        
             </div>
-
-            <div class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer">
-
+        
+            <div
+                class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer"
+                data-view="alerts">
+        
                 <i class="fa-solid fa-bell w-5"></i>
-
                 Alerts
-
+        
             </div>
-
-            <div class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer">
-
+        
+            <div
+                class="menu-item rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer"
+                data-view="settings">
+        
                 <i class="fa-solid fa-gear w-5"></i>
-
                 Settings
-
+        
             </div>
-
+        
         </nav>
 
         <!-- FOOTER -->
@@ -265,9 +272,13 @@
 
         <!-- CONTENT -->
 
-        <section class="flex-1 overflow-auto p-8">
+        <section
+            id="mainContent"
+            class="flex-1 overflow-auto p-8">
 
-<section class="developer-panel">
+            <div id="view-dashboard">
+
+            <section class="developer-panel">
 
     <div class="panel-title">
         Simulation Engine
@@ -460,6 +471,36 @@ class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
     </span>
 
 </div>
+            </div><!-- /view-dashboard -->
+
+            <!-- =====================================================
+                    OTRAS VISTAS DE LA APLICACIÓN
+            ====================================================== -->
+   
+            <div id="view-apm" class="hidden">
+                <!-- APM -->
+            </div>
+        
+            <div id="view-infrastructure" class="hidden">
+                <!-- Infrastructure -->
+            </div>
+        
+            <div id="view-services" class="hidden">
+                <!-- Services -->
+            </div>
+        
+            <div id="view-logs" class="hidden">
+                <!-- Logs -->
+            </div>
+        
+            <div id="view-alerts" class="hidden">
+                <!-- Alerts -->
+            </div>
+        
+            <div id="view-settings" class="hidden">
+                <!-- Settings -->
+            </div>
+
         </section>        
     </main>
 

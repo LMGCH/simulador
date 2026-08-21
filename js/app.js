@@ -16,6 +16,7 @@ const systemState = {
     errorHigh: false
 
 };
+let systemInitialized = false;
 // ======================================================
 // SERVICE TOPOLOGY
 // ======================================================
@@ -33,8 +34,6 @@ const serviceTopology = {
     identity:[],
 
     notifications:["api"],
-    healthScore: 100,
-    autoHealing: true
 
 };
 
@@ -290,7 +289,9 @@ const system = {
     memory: 54,
     latency: 118,
     errorRate: 0.05,
-    services: 0
+    services: 0,
+
+    status: "HEALTHY"
 };
 
 // Historial de alertas
@@ -306,19 +307,30 @@ const latencyHistory = new Array(60).fill(system.latency);
 const simulation = {
 
     currentScenario: "NORMAL",
-    
+
     targetUsers: 500,
 
     currentUsers: 500,
 
     engineState: "Running",
-    
+
     tick: 0,
 
     // Reservado para futuras transiciones automáticas
-    scenarioDuration: 30
+    scenarioDuration: 30,
+
+    // ==============================================
+    // OFFSETS DINÁMICOS PARA TRANSICIONES GRADUALES
+    // ==============================================
+
+    cpuOffset: 0,
+
+    latencyOffset: 0,
+
+    errorOffset: 0
 
 };
+
 // ======================================================
 // SCENARIOS
 // ======================================================
@@ -448,6 +460,27 @@ const thresholds = {
 
 function simulateSystem(){
     const scenario = scenarios[currentSimulationMode];
+
+    // ==============================================
+    // TRANSICIÓN GRADUAL ENTRE ESCENARIOS
+    // ==============================================
+    
+    const cpuTransitionSpeed = 0.07;
+    const latencyTransitionSpeed = 0.15;
+    const errorTransitionSpeed = 0.13;
+    
+    simulation.cpuOffset +=
+        (scenario.cpuOffset - simulation.cpuOffset) *
+        cpuTransitionSpeed;
+    
+    simulation.latencyOffset +=
+        (scenario.latencyOffset - simulation.latencyOffset) *
+        latencyTransitionSpeed;
+    
+    simulation.errorOffset +=
+        (scenario.errorOffset - simulation.errorOffset) *
+        errorTransitionSpeed;
+
     // 1. Evolución progresiva de usuarios hacia el objetivo del escenario
 const difference = simulation.targetUsers - system.users;
 
@@ -484,7 +517,7 @@ system.users = Math.max(
     12 +
     (system.throughput / 40) +
     (Math.random() * 4 - 2) +
-    scenario.cpuOffset;
+    simulation.cpuOffset;
     
     system.cpu = Math.min(100, Math.max(0, system.cpu)); // Protegemos límites entre 0 y 100
 
@@ -503,17 +536,19 @@ system.latency =
     70 +
     (system.cpu * 1.25) +
     (Math.random() * 10) +
-    scenario.latencyOffset;
+    simulation.latencyOffset;
 
     // 6. Error Rate (Comienza a crecer solo con alta saturación)
 system.errorRate =
     0.02 +                                  // Error base del sistema
     Math.max(0, (system.cpu - 80)) * 0.008 + // Solo aumenta a partir del 80 % de CPU
     (Math.random() * 0.01) +                 // Pequeña variación natural
-    scenario.errorOffset;
+    simulation.errorOffset;
 
 // Evitamos valores negativos
 system.errorRate = Math.max(0, system.errorRate);
+
+
 }
 // Nueva función 
 function updateServiceHealth(service){
@@ -572,7 +607,18 @@ function updateServiceHealth(service){
 // SERVICE STATUS ENGINE
 // ======================================================
 
+// ======================================================
+// SERVICE STATUS ENGINE
+// ======================================================
+
 function updateServiceStatus(service){
+
+    // Guardamos el estado anterior
+    const previousStatus = service.status;
+
+    // ==================================================
+    // CALCULAR NUEVO ESTADO
+    // ==================================================
 
     if(service.healthScore <= 10){
 
@@ -592,7 +638,35 @@ function updateServiceStatus(service){
 
     }
 
+    // ==================================================
+    // REGISTRAR CAMBIO EN EL TIMELINE
+    // ==================================================
+
+    if(previousStatus !== service.status){
+
+        const statusIcons = {
+    
+            HEALTHY:"🟢",
+            WARNING:"🟡",
+            CRITICAL:"🔴",
+            DOWN:"⚫"
+    
+        };
+    
+        addTimelineEvent(
+    
+            statusIcons[service.status],
+    
+            `${service.name}: ${previousStatus} → ${service.status}`,
+            "service"
+    
+        );
+    
+    }
+    
+
 }
+
 // ======================================================
 // SERVICES ENGINE
 // ======================================================
@@ -610,9 +684,12 @@ function simulateServices(){
     });
 
     system.services =
-        Object.values(services)
-              .filter(service => service.status !== "CRITICAL")
-              .length;
+    Object.values(services)
+        .filter(service =>
+            service.status !== "CRITICAL" &&
+            service.status !== "DOWN"
+        )
+        .length;
 
 }
 // ======================================================
@@ -669,10 +746,7 @@ service.requests =
         1.8
     );
 
-updateServiceHealth(service);
-updateServiceStatus(service);
-
-    });
+});
 
 }
 // ======================================================
@@ -714,6 +788,16 @@ function propagateDependencies(){
 // ======================================================
 function renderKPIs(){
 
+    // ==================================================
+    // SERVICIOS ACTIVOS
+    // ==================================================
+
+    const activeServices =
+        Object.values(services)
+            .filter(service =>
+                service.status !== "DOWN"
+            )
+            .length;
 
     // Valores reales procedentes del motor
     const values = [
@@ -723,7 +807,7 @@ function renderKPIs(){
         system.errorRate,
         system.cpu,
         system.memory,
-        system.services
+        activeServices
 
     ];
 
@@ -823,9 +907,59 @@ function renderKPIs(){
             // Servicios
             case 5:
 
-                trend.innerHTML =
-                "<span class='text-cyan-400'>Todos operativos</span>";
-
+        const totalServices =
+            Object.keys(services).length;
+        
+        const healthyServices =
+            Object.values(services)
+                .filter(service =>
+                    service.status === "HEALTHY"
+                )
+                .length;
+        
+        const warningServices =
+            Object.values(services)
+                .filter(service =>
+                    service.status === "WARNING"
+                )
+                .length;
+        
+        const downServices =
+            Object.values(services)
+                .filter(service =>
+                    service.status === "CRITICAL" ||
+                    service.status === "DOWN"
+                )
+                .length;
+            
+                const activeServices =
+                    totalServices - downServices;
+            
+                if(downServices > 0){
+            
+                    trend.innerHTML =
+                    `<span class='text-red-400'>
+                        🔴 ${activeServices} / ${totalServices} activos ·
+                        ${downServices} caído${downServices > 1 ? "s" : ""}
+                    </span>`;
+            
+                }else if(warningServices > 0){
+            
+                    trend.innerHTML =
+                    `<span class='text-yellow-400'>
+                        🟡 ${activeServices} / ${totalServices} activos ·
+                        ${warningServices} degradado${warningServices > 1 ? "s" : ""}
+                    </span>`;
+            
+                }else{
+            
+                    trend.innerHTML =
+                    `<span class='text-green-400'>
+                        🟢 ${healthyServices} / ${totalServices} Servicios saludables
+                    </span>`;
+            
+                }
+            
             break;
 
         }
@@ -853,7 +987,7 @@ function addAlert(level, message){
 
 }
 */
-function addTimelineEvent(icon, message){
+function addTimelineEvent(icon, message, type = "system"){
 
     const now = new Date();
 
@@ -868,11 +1002,12 @@ function addTimelineEvent(icon, message){
 
         time,
         icon,
-        message
+        message,
+        type
 
     });
 
-    if(timeline.length>12){
+    if(timeline.length > 12){
 
         timeline.pop();
 
@@ -966,7 +1101,20 @@ function renderTimeline(){
 
     container.innerHTML = "";
 
+    const typeLabels = {
+
+        engine: "ENGINE",
+        scenario: "SCENARIO",
+        system: "SYSTEM",
+        service: "SERVICE"
+
+    };
+
     timeline.forEach(event=>{
+
+        const type = event.type || "system";
+
+        const label = typeLabels[type] || "SYSTEM";
 
         container.innerHTML += `
 
@@ -979,6 +1127,10 @@ function renderTimeline(){
                 </div>
 
                 <div class="timeline-message">
+
+                    <span class="text-xs opacity-60 mr-2">
+                        ${label}
+                    </span>
 
                     ${event.icon} ${event.message}
 
@@ -1135,49 +1287,261 @@ const latencyChart = new Chart(ctx, {
 });
 
 // ======================================================
-// SYSTEM STATUS
+// GLOBAL SYSTEM STATUS ENGINE
 // ======================================================
-function renderSystemStatus(){
-    const status = document.getElementById("systemStatus");
-    if(!status) return; // Protección si el elemento no existe en el HTML
 
-    if(system.errorRate > 0.30){
-        status.innerHTML = "🔴 SYSTEM STATUS: CRITICAL";
-        status.className = "mt-2 text-sm font-semibold text-red-400";
+function updateGlobalSystemStatus(){
+
+    // Guardamos el estado anterior
+    const previousStatus = system.status;
+
+    const criticalServices =
+        Object.values(services)
+            .filter(service =>
+                service.status === "CRITICAL" ||
+                service.status === "DOWN"
+            )
+            .length;
+
+    const warningServices =
+        Object.values(services)
+            .filter(service =>
+                service.status === "WARNING"
+            )
+            .length;
+
+    // ==================================================
+    // ESTADO CRÍTICO
+    // ==================================================
+
+    if(
+        criticalServices > 0 ||
+        system.errorRate > 0.30
+    ){
+
+        system.status = "CRITICAL";
+
     }
-    else if(system.cpu > 70 || system.latency > 170){
-        status.innerHTML = "🟡 SYSTEM STATUS: DEGRADED";
-        status.className = "mt-2 text-sm font-semibold text-yellow-400";
+
+    // ==================================================
+    // ESTADO DEGRADADO
+    // ==================================================
+
+    else if(
+        warningServices > 0 ||
+        system.cpu > 70 ||
+        system.latency > 170
+    ){
+
+        system.status = "DEGRADED";
+
     }
+
+    // ==================================================
+    // ESTADO SALUDABLE
+    // ==================================================
+
     else{
-        status.innerHTML = "🟢 SYSTEM STATUS: HEALTHY";
-        status.className = "mt-2 text-sm font-semibold text-green-400";
+
+        system.status = "HEALTHY";
+
     }
+
+    // ==================================================
+    // EVENTO DE CAMBIO DE ESTADO GLOBAL
+    // ==================================================
+
+    if(previousStatus !== system.status){
+
+        const statusIcons = {
+
+            HEALTHY: "🟢",
+            DEGRADED: "🟡",
+            CRITICAL: "🔴"
+
+        };
+
+        addTimelineEvent(
+
+            statusIcons[system.status],
+
+            `SYSTEM STATUS: ${previousStatus} → ${system.status}`,
+
+            "system"
+
+        );
+
+    }
+
 }
 
 // ======================================================
-// ACTUALIZACIÓN DE LA GRÁFICA (Alineada con el estado real del sistema)
+// SYSTEM STATUS
 // ======================================================
-function updateLatencyChartVisuals() {
-    const dataset = latencyChart.data.datasets[0];
-    
-    // Inyectamos el valor REAL que generó tu función simulateSystem()
-    dataset.data.push(system.latency);
-    dataset.data.shift();
-    
-    // Cambiamos el color de la gráfica basándonos en los umbrales reales de tu sistema
-    if (system.errorRate > 0.30) {
-        dataset.borderColor = "#ef4444"; // Rojo (Crítico)
-        dataset.backgroundColor = "rgba(239, 68, 68, 0.15)";
-    } else if (system.cpu > 70 || system.latency > 170) {
-        dataset.borderColor = "#f59e0b"; // Ámbar (Degradado)
-        dataset.backgroundColor = "rgba(245, 158, 11, 0.15)";
-    } else {
-        dataset.borderColor = "#3b82f6"; // Azul original (Saludable)
-        dataset.backgroundColor = "rgba(59, 130, 246, 0.15)";
+function renderSystemStatus(){
+
+    const status =
+        document.getElementById("systemStatus");
+
+    if(!status) return;
+
+    const totalServices =
+        Object.keys(services).length;
+
+    const criticalServices =
+        Object.values(services)
+            .filter(service =>
+                service.status === "CRITICAL" ||
+                service.status === "DOWN"
+            )
+            .length;
+
+    const warningServices =
+        Object.values(services)
+            .filter(service =>
+                service.status === "WARNING"
+            )
+            .length;
+
+    // ==================================================
+    // ESTADO CRÍTICO
+    // ==================================================
+
+    if(
+        criticalServices > 0 ||
+        system.errorRate > 0.30
+    ){
+
+        status.innerHTML =
+            "🔴 SYSTEM STATUS: CRITICAL";
+
+        status.className =
+            "mt-2 text-sm font-semibold text-red-400";
+
     }
-    
+
+    // ==================================================
+    // ESTADO DEGRADADO
+    // ==================================================
+
+    else if(
+        warningServices > 0 ||
+        system.cpu > 70 ||
+        system.latency > 170
+    ){
+
+        status.innerHTML =
+            "🟡 SYSTEM STATUS: DEGRADED";
+
+        status.className =
+            "mt-2 text-sm font-semibold text-yellow-400";
+
+    }
+
+    // ==================================================
+    // ESTADO SALUDABLE
+    // ==================================================
+
+    else{
+
+        status.innerHTML =
+            "🟢 SYSTEM STATUS: HEALTHY";
+
+        status.className =
+            "mt-2 text-sm font-semibold text-green-400";
+
+    }
+
+}
+
+// ======================================================
+// ACTUALIZACIÓN DE LA GRÁFICA
+// ======================================================
+
+function updateLatencyChartVisuals(){
+
+    const dataset =
+        latencyChart.data.datasets[0];
+
+    // ==================================================
+    // ACTUALIZAR HISTÓRICO
+    // ==================================================
+
+    dataset.data.push(system.latency);
+
+    dataset.data.shift();
+
+    // ==================================================
+    // ESTADO DE LOS SERVICIOS
+    // ==================================================
+
+    const criticalServices =
+        Object.values(services)
+            .filter(service =>
+                service.status === "CRITICAL" ||
+                service.status === "DOWN"
+            )
+            .length;
+
+    const warningServices =
+        Object.values(services)
+            .filter(service =>
+                service.status === "WARNING"
+            )
+            .length;
+
+    // ==================================================
+    // ESTADO CRÍTICO
+    // ==================================================
+
+    if(
+        criticalServices > 0 ||
+        system.errorRate > 0.30
+    ){
+
+        dataset.borderColor = "#ef4444";
+
+        dataset.backgroundColor =
+            "rgba(239, 68, 68, 0.15)";
+
+    }
+
+    // ==================================================
+    // ESTADO DEGRADADO
+    // ==================================================
+
+    else if(
+        warningServices > 0 ||
+        system.cpu > 70 ||
+        system.latency > 170
+    ){
+
+        dataset.borderColor = "#f59e0b";
+
+        dataset.backgroundColor =
+            "rgba(245, 158, 11, 0.15)";
+
+    }
+
+    // ==================================================
+    // ESTADO SALUDABLE
+    // ==================================================
+
+    else{
+
+        dataset.borderColor = "#3b82f6";
+
+        dataset.backgroundColor =
+            "rgba(59, 130, 246, 0.15)";
+
+    }
+
+    // ==================================================
+    // ACTUALIZAR GRÁFICA
+    // ==================================================
+
     latencyChart.update();
+
 }
 // ======================================================
 // RENDERIZACIÓN DEL PANEL
@@ -1196,13 +1560,31 @@ function renderSimulationPanel(){
     // =====================================================
 addTimelineEvent(
     "🚀",
-    "Simulation Engine iniciado"
+    "Simulation Engine iniciado",
+    "engine"
+
 );
 // Ejecución inicial y temporizador unificado cada 2 segundos
 tick();
 setInterval(tick, 2000);
 
 function evaluateSystemState(){
+
+    // =====================================================
+    // INICIALIZACIÓN DEL ESTADO
+    // =====================================================
+
+    if(!systemInitialized){
+
+        systemState.cpuHigh = system.cpu > 70;
+        systemState.latencyHigh = system.latency > 170;
+        systemState.errorHigh = system.errorRate > 0.30;
+
+        systemInitialized = true;
+
+        return;
+
+    }
 
     // =====================================================
     // CPU
@@ -1216,24 +1598,26 @@ function evaluateSystemState(){
 
             addTimelineEvent(
                 "🟡",
-                "CPU supera el 70 %"
+                "CPU supera el 70 %",
+                "system"
             );
 
         }
 
-    }else{
+    }else if(system.cpu < 60){
 
         if(systemState.cpuHigh){
-
+    
             systemState.cpuHigh = false;
-
+    
             addTimelineEvent(
                 "🟢",
-                "CPU vuelve a valores normales"
+                "CPU vuelve a valores normales",
+                "system"
             );
-
+    
         }
-
+    
     }
 
     // =====================================================
@@ -1248,24 +1632,26 @@ function evaluateSystemState(){
 
             addTimelineEvent(
                 "🔴",
-                "Latencia supera los 170 ms"
+                "Latencia supera los 170 ms",
+                "system"
             );
 
         }
 
-    }else{
+    }else if(system.latency < 150){
 
         if(systemState.latencyHigh){
-
+    
             systemState.latencyHigh = false;
-
+    
             addTimelineEvent(
                 "🟢",
-                "Latencia vuelve a valores normales"
+                "Latencia vuelve a valores normales",
+                "system"
             );
-
+    
         }
-
+    
     }
 
     // =====================================================
@@ -1280,24 +1666,26 @@ function evaluateSystemState(){
 
             addTimelineEvent(
                 "🔴",
-                "La tasa de errores supera el 30 %"
+                "La tasa de errores supera el 30 %",
+                "system"
             );
 
         }
 
-    }else{
+    }else if(system.errorRate < 0.10){
 
         if(systemState.errorHigh){
-
+    
             systemState.errorHigh = false;
-
+    
             addTimelineEvent(
                 "🟢",
-                "La tasa de errores vuelve a la normalidad"
+                "La tasa de errores vuelve a la normalidad",
+                "system"
             );
-
+    
         }
-
+    
     }
 
 }
@@ -1311,7 +1699,10 @@ function tick(){
 
     simulateServices();
 
-    // Evalúa umbrales y genera eventos
+    // Calcula primero el estado global del sistema
+    updateGlobalSystemStatus();
+
+    // Después evalúa umbrales y genera alertas
     evaluateSystemState();
 
     // Actualiza la interfaz
@@ -1349,11 +1740,13 @@ document.getElementById('scenarioSelect').addEventListener('change', (event) => 
     console.log(
         `Escenario: ${selectedScenario} | Target: ${simulation.targetUsers}`
     );
-
+    
     addTimelineEvent(
         "🎯",
-        `Escenario ${selectedScenario} activado (Objetivo: ${simulation.targetUsers} usuarios)`
+        `Escenario ${selectedScenario} activado (Objetivo: ${simulation.targetUsers} usuarios)`,
+        "scenario"
     );
+
 
 });
 
