@@ -568,9 +568,17 @@ function updateServiceHealth(service){
 // SERVICE STATUS ENGINE
 // ======================================================
 
+// ======================================================
+// SERVICE STATUS ENGINE
+// ======================================================
+
 function updateServiceStatus(service){
 
-    if(service.healthScore <= 30){
+    if(service.healthScore <= 10){
+
+        service.status = "DOWN";
+
+    }else if(service.healthScore <= 30){
 
         service.status = "CRITICAL";
 
