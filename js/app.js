@@ -388,6 +388,8 @@ function renderLogsSummary(){
 
 }
 
+
+
 // ======================================================
 // LOG FILTER CONTROLS
 // ======================================================
@@ -1552,6 +1554,7 @@ function renderDashboardOverview(){
     }
 
 
+
     // ==================================================
     // GLOBAL METRICS
     // ==================================================
@@ -1860,6 +1863,10 @@ function renderDashboardOverview(){
     }
 
 }
+
+let assessmentPreviousStatus = null;
+
+
 
 // ======================================================
 // ALERTAS
@@ -2802,6 +2809,298 @@ function renderAlerts(){
             }`;
 
     }
+
+}
+// ======================================================
+// Operational Assessment
+// ======================================================
+function renderOperationalAssessment(){
+
+    const statusElement = document.getElementById("assessmentStatus");
+    const situationElement = document.getElementById("assessmentSituation");
+    const detailsElement = document.getElementById("assessmentDetails");
+    const impactElement = document.getElementById("assessmentImpact");
+    const conclusionElement = document.getElementById("assessmentConclusion");
+    const servicesElement = document.getElementById("assessmentServices");
+    const alertsElement = document.getElementById("assessmentAlerts");
+    const scenarioElement = document.getElementById("assessmentScenario");
+    const updatedElement = document.getElementById("assessmentUpdated");
+
+    if(
+        !statusElement ||
+        !situationElement ||
+        !detailsElement ||
+        !impactElement ||
+        !conclusionElement ||
+        !servicesElement ||
+        !alertsElement ||
+        !scenarioElement ||
+        !updatedElement
+    ){
+        return;
+    }
+
+    // ==================================================
+    // SERVICIOS
+    // ==================================================
+
+    const serviceList = Object.values(services);
+
+    const totalServices = serviceList.length;
+
+    const healthyServices = serviceList.filter(
+        service => service.status === "HEALTHY"
+    ).length;
+
+    const warningServices = serviceList.filter(
+        service => service.status === "WARNING"
+    ).length;
+
+    const criticalServices = serviceList.filter(
+        service =>
+            service.status === "CRITICAL" ||
+            service.status === "DOWN"
+    ).length;
+
+
+    // ==================================================
+    // ALERTAS
+    // ==================================================
+
+    const activeAlerts =
+        alerts.filter(alert =>
+            alert.status === "ACTIVE"
+        ).length;
+
+
+    // ==================================================
+    // ESTADO GLOBAL
+    // ==================================================
+
+    const globalStatus = system.status;
+
+
+    // ==================================================
+    // ESCENARIO
+    // ==================================================
+
+    const scenario =
+        typeof currentSimulationMode !== "undefined"
+            ? currentSimulationMode
+            : "NORMAL";
+
+
+    // ==================================================
+    // RECOVERY VISUAL
+    // ==================================================
+
+    let displayStatus = globalStatus;
+
+    if(
+        globalStatus === "HEALTHY" &&
+        (
+            assessmentPreviousStatus === "DEGRADED" ||
+            assessmentPreviousStatus === "CRITICAL"
+        )
+    ){
+
+        displayStatus = "RECOVERING";
+
+    }
+
+
+    // ==================================================
+    // CONTENIDO POR ESTADO
+    // ==================================================
+
+    let situation = "";
+    let details = "";
+    let impact = "";
+    let conclusion = "";
+    let statusIcon = "";
+
+
+    if(displayStatus === "HEALTHY"){
+
+        statusIcon = "🟢";
+
+        situation =
+            "System is operating within normal conditions.";
+
+        details =
+            "All monitored indicators are currently within their configured thresholds.";
+
+        impact =
+            "No significant service degradation detected.";
+
+        conclusion =
+            "🟢 No intervention required.";
+
+    }
+
+
+    else if(displayStatus === "DEGRADED"){
+
+        statusIcon = "🟡";
+
+        situation =
+            "System is operating under degraded conditions.";
+
+        const degradedConditions = [];
+
+        if(system.cpu > 70){
+            degradedConditions.push("CPU utilization is above its configured threshold");
+        }
+
+        if(system.latency > 170){
+            degradedConditions.push("latency is above its configured threshold");
+        }
+
+        if(warningServices > 0){
+
+            degradedConditions.push(
+                `${warningServices} service${warningServices > 1 ? "s are" : " is"} reporting warnings`
+            );
+
+        }
+
+        details =
+            degradedConditions.length > 0
+                ? degradedConditions.join(". ") + "."
+                : "Some monitored conditions require continued observation.";
+
+        impact =
+            "Performance degradation is present, but core platform services remain operational.";
+
+        conclusion =
+            "🟡 Continued monitoring recommended.";
+
+    }
+
+
+    else if(displayStatus === "CRITICAL"){
+
+        statusIcon = "🔴";
+
+        situation =
+            "System is operating under critical conditions.";
+
+        const criticalConditions = [];
+
+        if(criticalServices > 0){
+
+            criticalConditions.push(
+                `${criticalServices} service${criticalServices > 1 ? "s are" : " is"} in a critical or unavailable state`
+            );
+
+        }
+
+        if(system.errorRate > 0.30){
+
+            criticalConditions.push(
+                "error rate is above its configured critical threshold"
+            );
+
+        }
+
+        details =
+            criticalConditions.length > 0
+                ? criticalConditions.join(". ") + "."
+                : "Critical conditions have been detected in the platform.";
+
+        impact =
+            "Service availability or platform reliability is currently affected.";
+
+        conclusion =
+            "🔴 Immediate investigation recommended.";
+
+    }
+
+
+    else if(displayStatus === "RECOVERING"){
+
+        statusIcon = "🔵";
+
+        situation =
+            "System is recovering from a previous degraded condition.";
+
+        details =
+            "Monitored indicators have returned to acceptable ranges and service conditions are stabilizing.";
+
+        impact =
+            "Previous degradation is clearing. Platform operations are returning to normal.";
+
+        conclusion =
+            "🔵 Recovery in progress — continue monitoring.";
+
+    }
+
+
+    // ==================================================
+    // RENDER STATUS
+    // ==================================================
+
+    statusElement.textContent =
+        `${statusIcon} ${displayStatus}`;
+
+
+    situationElement.textContent =
+        situation;
+
+
+    detailsElement.textContent =
+        details;
+
+
+    impactElement.textContent =
+        impact;
+
+
+    conclusionElement.textContent =
+        conclusion;
+
+
+    // ==================================================
+    // OPERATIONAL SNAPSHOT
+    // ==================================================
+
+    servicesElement.textContent =
+        `${healthyServices} / ${totalServices} HEALTHY`;
+
+
+    if(warningServices > 0){
+
+        servicesElement.textContent +=
+            ` · ${warningServices} WARNING`;
+
+    }
+
+
+    if(criticalServices > 0){
+
+        servicesElement.textContent +=
+            ` · ${criticalServices} CRITICAL`;
+
+    }
+
+
+    alertsElement.textContent =
+        activeAlerts;
+
+
+    scenarioElement.textContent =
+        scenario;
+
+
+    updatedElement.textContent =
+        new Date().toLocaleTimeString();
+
+
+    // ==================================================
+    // GUARDAMOS EL ESTADO REAL
+    // ==================================================
+
+    assessmentPreviousStatus = globalStatus;
 
 }
 
@@ -3827,8 +4126,6 @@ function resetSimulation(){
     renderLogs();
 
     renderLogsSummary();
-
-    renderTimeline();
 
     updateLatencyChartVisuals();
 
@@ -5999,6 +6296,8 @@ function tick(){
     renderInfrastructureView();
 
     renderSystemStatus();
+
+    renderOperationalAssessment();
 
 
     // ==============================================
