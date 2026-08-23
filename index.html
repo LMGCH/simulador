@@ -124,7 +124,7 @@
 
         <!-- MENU -->
 
-        <nav id="mainNavigation" class="flex-1 mt-4 space-y-2 px-3">
+        <nav class="flex-1 mt-4 space-y-2 px-3">
 
             <div
                 class="menu-item active-menu rounded-lg px-4 py-3 flex items-center gap-3 cursor-pointer"
@@ -382,67 +382,384 @@ class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
 
 </div>
 
-            <!-- LOWER -->
+<!-- =====================================================
+LOWER
+===================================================== -->
 
 <div class="grid grid-cols-3 gap-6">
 
-    <!-- ALERTAS -->
+<!-- =================================================
+    SYSTEM OVERVIEW
+================================================== -->
 
-    <div class="card p-6">
+<div class="card p-6">
 
-        <h2 class="text-lg font-semibold mb-4">
-            🚨 System Alerts
-        </h2>
+   <div class="flex justify-between items-center mb-5">
 
-        <div
-            id="alertsPanel"
-            class="space-y-2 text-sm max-h-72 overflow-y-auto">
+       <div>
 
-        </div>
+           <h2 class="text-lg font-semibold">
+               🧭 System Overview
+           </h2>
 
-    </div>
+           <p class="text-xs text-gray-500 mt-1">
+               Current platform health
+           </p>
 
-    <!-- TIMELINE -->
+       </div>
 
-    <div class="card p-6">
+       <span
+           id="dashboardSystemStatus"
+           class="text-xs font-semibold">
 
-        <h2 class="text-lg font-semibold mb-4">
-            📜 Event Timeline
-        </h2>
+           HEALTHY
 
-        <div
-            id="timelineContainer"
-            class="timeline-container">
+       </span>
 
-        </div>
+   </div>
 
-    </div>
 
-    <!-- FUTUROS SERVICIOS -->
+   <!-- SYSTEM STATUS -->
 
-    <div class="card p-6">
+   <div
+       id="dashboardSystemMessage"
+       class="mb-5 p-3 rounded-lg
+              bg-[#252b3d]
+              border border-[#394056]
+              text-sm">
 
-    <div class="flex justify-between items-center mb-4">
+       System operating normally.
 
-        <h2 class="text-lg font-semibold">
+   </div>
 
-            🖥️ Services Map
 
-        </h2>
+   <!-- GLOBAL METRICS -->
 
-        <span class="text-xs text-gray-400">
+   <div class="grid grid-cols-2 gap-x-6 gap-y-4">
 
-            Live
+       <div>
 
-        </span>
+           <div class="text-xs text-gray-500 uppercase">
+               Users
+           </div>
 
-    </div>
+           <div
+               id="overviewUsers"
+               class="text-xl font-semibold mt-1">
+               --
+           </div>
 
-    <div
-        id="servicesMap"
-        class="space-y-3">
+       </div>
 
-    </div>
+
+       <div>
+
+           <div class="text-xs text-gray-500 uppercase">
+               Throughput
+           </div>
+
+           <div
+               id="overviewThroughput"
+               class="text-xl font-semibold mt-1">
+               --
+           </div>
+
+       </div>
+
+
+       <div>
+
+           <div class="text-xs text-gray-500 uppercase">
+               CPU
+           </div>
+
+           <div
+               id="overviewCPU"
+               class="text-xl font-semibold mt-1">
+               --
+           </div>
+
+       </div>
+
+
+       <div>
+
+           <div class="text-xs text-gray-500 uppercase">
+               Memory
+           </div>
+
+           <div
+               id="overviewMemory"
+               class="text-xl font-semibold mt-1">
+               --
+           </div>
+
+       </div>
+
+
+       <div>
+
+           <div class="text-xs text-gray-500 uppercase">
+               Latency
+           </div>
+
+           <div
+               id="overviewLatency"
+               class="text-xl font-semibold mt-1">
+               --
+           </div>
+
+       </div>
+
+
+       <div>
+
+           <div class="text-xs text-gray-500 uppercase">
+               Error Rate
+           </div>
+
+           <div
+               id="overviewErrorRate"
+               class="text-xl font-semibold mt-1">
+               --
+           </div>
+
+       </div>
+
+   </div>
+
+
+   <!-- SERVICES HEALTH -->
+
+   <div class="mt-6">
+
+       <div class="flex justify-between items-center mb-2">
+
+           <span class="text-xs uppercase tracking-wider text-gray-500">
+               Services Health
+           </span>
+
+           <span
+               id="overviewServices"
+               class="text-xs text-gray-400">
+               --
+           </span>
+
+       </div>
+
+       <div
+           class="w-full h-2 rounded-full
+                  bg-[#252b3d]
+                  overflow-hidden">
+
+           <div
+               id="overviewServicesBar"
+               class="h-full rounded-full transition-all"
+               style="width: 0%">
+
+           </div>
+
+       </div>
+
+   </div>
+
+</div>
+
+
+<!-- =================================================
+    OBSERVABILITY SUMMARY
+================================================== -->
+
+<div class="card p-6">
+
+   <div class="mb-5">
+
+       <h2 class="text-lg font-semibold">
+           🔎 Observability Summary
+       </h2>
+
+       <p class="text-xs text-gray-500 mt-1">
+           Current conditions and recent activity
+       </p>
+
+   </div>
+
+
+   <!-- ACTIVE ALERTS -->
+
+   <div>
+
+       <div class="text-xs uppercase tracking-wider text-gray-500 mb-3">
+           Active Alerts
+       </div>
+
+       <div class="grid grid-cols-3 gap-3">
+
+           <div class="bg-[#252b3d] rounded-lg p-3 text-center">
+
+               <div
+                   id="summaryCriticalAlerts"
+                   class="text-xl font-bold">
+                   0
+               </div>
+
+               <div class="text-xs text-gray-500 mt-1">
+                   Critical
+               </div>
+
+           </div>
+
+
+           <div class="bg-[#252b3d] rounded-lg p-3 text-center">
+
+               <div
+                   id="summaryWarningAlerts"
+                   class="text-xl font-bold">
+                   0
+               </div>
+
+               <div class="text-xs text-gray-500 mt-1">
+                   Warning
+               </div>
+
+           </div>
+
+
+           <div class="bg-[#252b3d] rounded-lg p-3 text-center">
+
+               <div
+                   id="summaryResolvedAlerts"
+                   class="text-xl font-bold">
+                   0
+               </div>
+
+               <div class="text-xs text-gray-500 mt-1">
+                   Resolved
+               </div>
+
+           </div>
+
+       </div>
+
+   </div>
+
+
+   <!-- CONDITIONS -->
+
+   <div class="mt-6">
+
+       <div class="text-xs uppercase tracking-wider text-gray-500 mb-3">
+           Current Conditions
+       </div>
+
+       <div class="space-y-2 text-sm">
+
+           <div class="flex justify-between">
+
+               <span class="text-gray-400">
+                   CPU
+               </span>
+
+               <span id="conditionCPU">
+                   NORMAL
+               </span>
+
+           </div>
+
+
+           <div class="flex justify-between">
+
+               <span class="text-gray-400">
+                   Latency
+               </span>
+
+               <span id="conditionLatency">
+                   NORMAL
+               </span>
+
+           </div>
+
+
+           <div class="flex justify-between">
+
+               <span class="text-gray-400">
+                   Error Rate
+               </span>
+
+               <span id="conditionErrors">
+                   NORMAL
+               </span>
+
+           </div>
+
+
+           <div class="flex justify-between">
+
+               <span class="text-gray-400">
+                   Services
+               </span>
+
+               <span id="conditionServices">
+                   6 / 6 HEALTHY
+               </span>
+
+           </div>
+
+       </div>
+
+   </div>
+
+
+   <!-- RECENT ACTIVITY -->
+
+   <div class="mt-6">
+
+       <div class="text-xs uppercase tracking-wider text-gray-500 mb-3">
+           Recent Activity
+       </div>
+
+       <div
+           id="dashboardRecentEvents"
+           class="space-y-2 text-xs">
+
+           <div class="text-gray-500">
+               No recent events.
+           </div>
+
+       </div>
+
+   </div>
+
+</div>
+
+
+<!-- =================================================
+    SERVICES MAP
+================================================== -->
+
+<div class="card p-6">
+
+   <div class="flex justify-between items-center mb-4">
+
+       <h2 class="text-lg font-semibold">
+
+           🖥️ Services Map
+
+       </h2>
+
+       <span class="text-xs text-gray-400">
+
+           Live
+
+       </span>
+
+   </div>
+
+   <div
+       id="servicesMap"
+       class="space-y-3">
+
+   </div>
 
 </div>
 
@@ -477,30 +794,1173 @@ class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
                     OTRAS VISTAS DE LA APLICACIÓN
             ====================================================== -->
    
-            <div id="view-apm" class="hidden">
-                <!-- APM -->
-            </div>
+            <!-- =====================================================
+            APM VIEW
+       ===================================================== -->
+       
+       <div id="view-apm" class="hidden">
+       
+           <!-- =============================================
+                APM HEADER
+           ============================================== -->
+       
+           <div class="flex justify-between items-center mb-8">
+       
+               <div>
+       
+                   <h2 class="text-2xl font-bold">
+                       Application Performance Monitoring
+                   </h2>
+       
+                   <p class="text-sm text-gray-400 mt-1">
+                       Rendimiento y comportamiento de la aplicación en tiempo real
+                   </p>
+       
+               </div>
+       
+               <div
+                   id="apmStatus"
+                   class="bg-[#252b3d] px-4 py-2 rounded-lg text-sm">
+       
+                   ● Analizando
+       
+               </div>
+       
+           </div>
+       
+       
+           <!-- =============================================
+                APM SUMMARY
+           ============================================== -->
+       
+           <div
+               id="apmSummary"
+               class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+       
+           </div>
+       
+       
+           <!-- =============================================
+                PERFORMANCE OVERVIEW
+           ============================================== -->
+       
+           <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+       
+       
+               <!-- APPLICATION PERFORMANCE -->
+       
+               <div class="card p-6">
+       
+                   <div class="flex justify-between items-center mb-6">
+       
+                       <div>
+       
+                           <h3 class="text-lg font-semibold">
+                               Application Performance
+                           </h3>
+       
+                           <p class="text-sm text-gray-400 mt-1">
+                               Estado actual de las métricas principales
+                           </p>
+       
+                       </div>
+       
+                       <div class="text-xs text-gray-400">
+                           Live
+                       </div>
+       
+                   </div>
+       
+                   <div
+                       id="apmPerformanceMetrics"
+                       class="space-y-5">
+       
+                   </div>
+       
+               </div>
+       
+       
+               <!-- APPLICATION HEALTH -->
+       
+               <div class="card p-6">
+       
+                   <div class="flex justify-between items-center mb-6">
+       
+                       <div>
+       
+                           <h3 class="text-lg font-semibold">
+                               Application Health
+                           </h3>
+       
+                           <p class="text-sm text-gray-400 mt-1">
+                               Estado general de la aplicación
+                           </p>
+       
+                       </div>
+       
+                   </div>
+       
+                   <div
+                       id="apmHealth">
+       
+                   </div>
+       
+               </div>
+       
+           </div>
+       
+       
+           <!-- =============================================
+                APM INSIGHTS
+           ============================================== -->
+       
+           <div class="card p-6">
+       
+               <div class="flex justify-between items-center mb-6">
+       
+                   <div>
+       
+                       <h3 class="text-lg font-semibold">
+                           Performance Insights
+                       </h3>
+       
+                       <p class="text-sm text-gray-400 mt-1">
+                           Análisis automático del comportamiento actual
+                       </p>
+       
+                   </div>
+       
+                   <div class="text-xs text-gray-400">
+                       Auto analysis
+                   </div>
+       
+               </div>
+       
+               <div
+                   id="apmInsights"
+                   class="space-y-3">
+       
+               </div>
+       
+           </div>
+       
+       </div>
         
+       <!-- =====================================================
+                INFRASTRUCTURE VIEW
+            ===================================================== -->
+            
             <div id="view-infrastructure" class="hidden">
-                <!-- Infrastructure -->
+            
+                <!-- =============================================
+                    INFRASTRUCTURE HEADER
+                ============================================== -->
+            
+                <div class="flex justify-between items-center mb-8">
+            
+                    <div>
+            
+                        <h2 class="text-2xl font-bold">
+                            Infrastructure
+                        </h2>
+            
+                        <p class="text-sm text-gray-400 mt-1">
+                            Estado y capacidad de la infraestructura del sistema
+                        </p>
+            
+                    </div>
+            
+                    <div
+                        id="infrastructureStatus"
+                        class="bg-[#252b3d] px-4 py-2 rounded-lg text-sm">
+            
+                        ● Monitoring infrastructure
+            
+                    </div>
+            
+                </div>
+            
+            
+                <!-- =============================================
+                    INFRASTRUCTURE SUMMARY
+                ============================================== -->
+            
+                <div
+                    id="infrastructureSummary"
+                    class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+            
+                </div>
+            
+            
+                <!-- =============================================
+                    RESOURCE UTILIZATION
+                ============================================== -->
+            
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+            
+            
+                    <!-- RESOURCE USAGE -->
+            
+                    <div class="card p-6">
+            
+                        <div class="flex justify-between items-center mb-6">
+            
+                            <div>
+            
+                                <h3 class="text-lg font-semibold">
+                                    Resource Utilization
+                                </h3>
+            
+                                <p class="text-sm text-gray-400 mt-1">
+                                    Consumo actual de recursos
+                                </p>
+            
+                            </div>
+            
+                            <div class="text-xs text-gray-400">
+                                Live
+                            </div>
+            
+                        </div>
+            
+                        <div
+                            id="infrastructureResources"
+                            class="space-y-5">
+            
+                        </div>
+            
+                    </div>
+            
+            
+                    <!-- CAPACITY -->
+            
+                    <div class="card p-6">
+            
+                        <div class="flex justify-between items-center mb-6">
+            
+                            <div>
+            
+                                <h3 class="text-lg font-semibold">
+                                    Capacity Overview
+                                </h3>
+            
+                                <p class="text-sm text-gray-400 mt-1">
+                                    Capacidad disponible del sistema
+                                </p>
+            
+                            </div>
+            
+                        </div>
+            
+                        <div
+                            id="infrastructureCapacity">
+            
+                        </div>
+            
+                    </div>
+            
+                </div>
+            
+            
+                <!-- =============================================
+                    INFRASTRUCTURE NODES
+                ============================================== -->
+            
+                <div class="card p-6">
+            
+                    <div class="flex justify-between items-center mb-6">
+            
+                        <div>
+            
+                            <h3 class="text-lg font-semibold">
+                                Infrastructure Nodes
+                            </h3>
+            
+                            <p class="text-sm text-gray-400 mt-1">
+                                Distribución simulada de los recursos del sistema
+                            </p>
+            
+                        </div>
+            
+                        <div class="text-xs text-gray-400">
+                            Virtual cluster
+                        </div>
+            
+                    </div>
+            
+                    <div
+                        id="infrastructureNodes"
+                        class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            
+                    </div>
+            
+                </div>
+            
             </div>
         
             <div id="view-services" class="hidden">
-                <!-- Services -->
-            </div>
-        
-            <div id="view-logs" class="hidden">
-                <!-- Logs -->
-            </div>
-        
-            <div id="view-alerts" class="hidden">
-                <!-- Alerts -->
-            </div>
-        
-            <div id="view-settings" class="hidden">
-                <!-- Settings -->
-            </div>
 
+                <!-- =============================================
+                     SERVICES HEADER
+                ============================================== -->
+            
+                <div class="flex justify-between items-center mb-8">
+            
+                    <div>
+            
+                        <h2 class="text-2xl font-bold">
+                            Services
+                        </h2>
+            
+                        <p class="text-sm text-gray-400 mt-1">
+                            Monitorización detallada de los microservicios
+                        </p>
+            
+                    </div>
+            
+                    <div
+                        class="bg-[#252b3d] px-4 py-2 rounded-lg text-sm text-green-400">
+            
+                        ● Live Monitoring
+            
+                    </div>
+            
+                </div>
+            
+            
+                <!-- =============================================
+                     SERVICES SUMMARY
+                ============================================== -->
+            
+                <div
+                    id="servicesSummary"
+                    class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            
+                </div>
+            
+                <!-- =============================================
+                SERVICE DEPENDENCY MAP
+                ============================================== -->
+                
+                <div class="card p-6 mb-8">
+                
+                    <div class="flex justify-between items-center mb-6">
+                
+                        <div>
+                
+                            <h2 class="text-lg font-semibold">
+                
+                                Service Dependency Map
+                
+                            </h2>
+                
+                            <p class="text-sm text-gray-400 mt-1">
+                
+                                Relaciones y dependencias entre microservicios
+                
+                            </p>
+                
+                        </div>
+                
+                        <div class="text-xs text-gray-400">
+                
+                            ● Live topology
+                
+                        </div>
+                
+                    </div>
+                
+                    <div
+                        id="serviceDependencyMap"
+                        class="overflow-x-auto">
+                
+                    </div>
+                
+                </div>
+            
+                <!-- =============================================
+                     SERVICES DETAIL
+                ============================================== -->
+            
+                <div
+                    id="servicesDetail"
+                    class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            
+                </div>
+            
+            </div>
+        
+            <!-- =====================================================
+                    LOGS VIEW
+            ===================================================== -->
+            
+            <div id="view-logs" class="hidden">
+            
+                <!-- LOGS HEADER -->
+            
+                <div class="flex justify-between items-center mb-8">
+            
+                    <div>
+            
+                        <h2 class="text-2xl font-bold">
+                            Logs
+                        </h2>
+            
+                        <p class="text-sm text-gray-400 mt-1">
+                            Registro técnico de eventos del sistema y servicios
+                        </p>
+            
+                    </div>
+            
+                    <div
+                        class="bg-[#252b3d] px-4 py-2 rounded-lg text-sm text-green-400">
+            
+                        ● Live Streaming
+            
+                    </div>
+            
+                </div>
+            
+            
+                <!-- LOG SUMMARY -->
+            
+                <div
+                    id="logsSummary"
+                    class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                </div>
+            
+            
+                <!-- LOG CONTROLS -->
+            
+                <div class="card p-4 mb-6">
+            
+                    <div
+                        class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+            
+                        <!-- FILTERS -->
+            
+                        <div
+                            id="logsFilters"
+                            class="flex flex-wrap gap-2">
+            
+                            <button
+                                type="button"
+                                class="log-filter active-log-filter"
+                                data-level="ALL">
+                                All
+                            </button>
+            
+                            <button
+                                type="button"
+                                class="log-filter"
+                                data-level="INFO">
+                                Info
+                            </button>
+            
+                            <button
+                                type="button"
+                                class="log-filter"
+                                data-level="WARNING">
+                                Warning
+                            </button>
+            
+                            <button
+                                type="button"
+                                class="log-filter"
+                                data-level="ERROR">
+                                Error
+                            </button>
+            
+                            <button
+                                type="button"
+                                class="log-filter"
+                                data-level="CRITICAL">
+                                Critical
+                            </button>
+            
+                        </div>
+            
+            
+                        <!-- SEARCH -->
+            
+                        <div
+                            class="flex items-center gap-3
+                                    bg-[#252b3d]
+                                    border border-[#394056]
+                                    rounded-lg
+                                    px-4 py-2">
+            
+                            <i class="fa-solid fa-magnifying-glass text-gray-500"></i>
+            
+                            <input
+                                id="logsSearch"
+                                type="text"
+                                placeholder="Search logs..."
+                                class="bg-transparent
+                                        outline-none
+                                        text-sm
+                                        text-gray-200
+                                        w-full
+                                        xl:w-72">
+            
+                        </div>
+            
+                    </div>
+            
+                </div>
+            
+            
+                <!-- LOG TABLE -->
+            
+                <div class="card overflow-hidden">
+            
+                    <!-- TABLE HEADER -->
+            
+                    <div
+                        class="grid grid-cols-[110px_110px_150px_1fr]
+                                gap-4
+                                px-6 py-4
+                                border-b border-[#2f3445]
+                                text-xs
+                                uppercase
+                                tracking-wider
+                                text-gray-500">
+            
+                        <div>Time</div>
+                        <div>Level</div>
+                        <div>Source</div>
+                        <div>Message</div>
+            
+                    </div>
+            
+            
+                    <!-- LOGS CONTAINER -->
+            
+                    <div
+                        id="logsContainer"
+                        class="divide-y
+                                divide-[#2f3445]
+                                max-h-[600px]
+                                overflow-y-auto">
+            
+                        <!-- Logs generated dynamically -->
+            
+                    </div>
+            
+                </div>
+            
+            </div>
+       
+       
+            <!-- =====================================================
+                    ALERTS VIEW
+            ===================================================== -->
+            
+            <div id="view-alerts" class="hidden">
+            
+            
+                <!-- =============================================
+                     ALERTS HEADER
+                ============================================== -->
+            
+                <div class="flex justify-between items-center mb-8">
+            
+                    <div>
+            
+                        <h2 class="text-2xl font-bold">
+                            Alerts
+                        </h2>
+            
+                        <p class="text-sm text-gray-400 mt-1">
+                            Monitorización y gestión de incidencias activas
+                        </p>
+            
+                    </div>
+            
+                    <div
+                        class="bg-[#252b3d] px-4 py-2 rounded-lg
+                               text-sm text-green-400">
+            
+                        ● Alert Monitoring
+            
+                    </div>
+            
+                </div>
+            
+            
+                <!-- =============================================
+                     ALERTS SUMMARY
+                ============================================== -->
+            
+                <div
+                    id="alertsSummary"
+                    class="grid grid-cols-1
+                           sm:grid-cols-2
+                           xl:grid-cols-4
+                           gap-6 mb-8">
+            
+                    <!-- Generated dynamically -->
+            
+                </div>
+            
+            
+                <!-- =============================================
+                     ACTIVE ALERTS
+                ============================================== -->
+            
+                <div class="card overflow-hidden mb-8">
+            
+            
+                    <!-- HEADER -->
+            
+                    <div
+                        class="px-6 py-5
+                               border-b border-[#2f3445]
+                               flex justify-between
+                               items-center">
+            
+                        <div>
+            
+                            <h3 class="font-semibold text-lg">
+                                Active Alerts
+                            </h3>
+            
+                            <p
+                                id="activeAlertsCount"
+                                class="text-xs text-gray-500 mt-1">
+            
+                                0 active alerts
+            
+                            </p>
+            
+                        </div>
+            
+            
+                        <div
+                            class="text-xs text-red-400
+                                   font-medium">
+            
+                            ● Live Detection
+            
+                        </div>
+            
+                    </div>
+            
+            
+                    <!-- ALERTS LIST -->
+            
+                    <div
+                        id="activeAlertsContainer"
+                        class="divide-y divide-[#2f3445]
+                               max-h-[500px]
+                               overflow-y-auto">
+            
+                        <!-- Alerts generated dynamically -->
+            
+                    </div>
+            
+                </div>
+            
+            
+                <!-- =============================================
+                     ALERT HISTORY
+                ============================================== -->
+            
+                <div class="card overflow-hidden">
+            
+            
+                    <!-- HEADER -->
+            
+                    <div
+                        class="px-6 py-5
+                               border-b border-[#2f3445]
+                               flex justify-between
+                               items-center">
+            
+                        <div>
+            
+                            <h3 class="font-semibold text-lg">
+                                Alert History
+                            </h3>
+            
+                            <p class="text-xs text-gray-500 mt-1">
+                                Recent resolved and historical incidents
+                            </p>
+            
+                        </div>
+            
+            
+                        <span class="text-xs text-gray-500">
+                            Last events
+                        </span>
+            
+                    </div>
+            
+            
+                    <!-- HISTORY LIST -->
+            
+                    <div
+                        id="alertsHistoryContainer"
+                        class="divide-y divide-[#2f3445]
+                               max-h-[500px]
+                               overflow-y-auto">
+            
+                        <!-- Alert history generated dynamically -->
+            
+                    </div>
+            
+                </div>
+            
+            
+            </div>           
+          
+            
+            <!-- =====================================================
+                    SETTINGS VIEW
+            ===================================================== -->
+            
+            <div id="view-settings" class="hidden">
+            
+            
+                <!-- =============================================
+                     SETTINGS HEADER
+                ============================================== -->
+            
+                <div class="flex justify-between items-center mb-8">
+            
+                    <div>
+            
+                        <h2 class="text-2xl font-bold">
+                            Settings
+                        </h2>
+            
+                        <p class="text-sm text-gray-400 mt-1">
+                            Configuration and control of the simulation environment
+                        </p>
+            
+                    </div>
+            
+                    <div
+                        class="bg-[#252b3d] px-4 py-2 rounded-lg
+                               text-sm text-blue-400">
+            
+                        ⚙ System Configuration
+            
+                    </div>
+            
+                </div>
+            
+            
+                <!-- =============================================
+                     SIMULATION CONTROL
+                ============================================== -->
+            
+                <div class="card p-6 mb-8">
+            
+                    <div class="flex items-center gap-3 mb-6">
+            
+                        <div
+                            class="w-10 h-10 rounded-lg
+                                   bg-blue-500/10
+                                   flex items-center
+                                   justify-center
+                                   text-blue-400">
+            
+                            <i class="fa-solid fa-play"></i>
+            
+                        </div>
+            
+                        <div>
+            
+                            <h3 class="font-semibold text-lg">
+                                Simulation Control
+                            </h3>
+            
+                            <p class="text-xs text-gray-500 mt-1">
+                                Manage the behaviour of the simulation engine
+                            </p>
+            
+                        </div>
+            
+                    </div>
+            
+            
+                    <div
+                        class="grid grid-cols-1
+                               md:grid-cols-2
+                               xl:grid-cols-4
+                               gap-6">
+            
+            
+                        <!-- SIMULATION STATUS -->
+            
+                        <div>
+            
+                            <label
+                                class="text-xs uppercase
+                                       tracking-wider text-gray-500">
+            
+                                Engine Status
+            
+                            </label>
+            
+                            <div
+                                id="settingsEngineStatus"
+                                class="mt-2 text-green-400 font-semibold">
+            
+                                ● Running
+            
+                            </div>
+            
+                        </div>
+            
+            
+                        <!-- CURRENT SCENARIO -->
+            
+                        <div>
+            
+                            <label
+                                class="text-xs uppercase
+                                       tracking-wider text-gray-500">
+            
+                                Current Scenario
+            
+                            </label>
+            
+                            <div
+                                id="settingsCurrentScenario"
+                                class="mt-2 font-semibold">
+            
+                                NORMAL
+            
+                            </div>
+            
+                        </div>
+            
+            
+                        <!-- PAUSE BUTTON -->
+            
+                        <div>
+            
+                            <label
+                                class="text-xs uppercase
+                                       tracking-wider text-gray-500">
+            
+                                Simulation
+            
+                            </label>
+            
+                            <button
+                                id="toggleSimulationButton"
+                                type="button"
+                                class="mt-2 w-full
+                                       bg-[#252b3d]
+                                       hover:bg-[#30374d]
+                                       border border-[#394056]
+                                       rounded-lg px-4 py-2
+                                       text-sm transition">
+            
+                                <i class="fa-solid fa-pause mr-2"></i>
+            
+                                Pause Simulation
+            
+                            </button>
+            
+                        </div>
+            
+            
+                        <!-- RESET BUTTON -->
+            
+                        <div>
+            
+                            <label
+                                class="text-xs uppercase
+                                       tracking-wider text-gray-500">
+            
+                                System
+            
+                            </label>
+            
+                            <button
+                                id="resetSimulationButton"
+                                type="button"
+                                class="mt-2 w-full
+                                       bg-[#252b3d]
+                                       hover:bg-[#30374d]
+                                       border border-[#394056]
+                                       rounded-lg px-4 py-2
+                                       text-sm transition">
+            
+                                <i class="fa-solid fa-rotate-right mr-2"></i>
+            
+                                Reset Simulation
+            
+                            </button>
+            
+                        </div>
+            
+                    </div>
+            
+                </div>
+            
+            
+                <!-- =============================================
+                     ALERT CONFIGURATION
+                ============================================== -->
+            
+                <div class="card p-6 mb-8">
+            
+                    <div class="flex items-center gap-3 mb-6">
+            
+                        <div
+                            class="w-10 h-10 rounded-lg
+                                   bg-yellow-500/10
+                                   flex items-center
+                                   justify-center
+                                   text-yellow-400">
+            
+                            <i class="fa-solid fa-bell"></i>
+            
+                        </div>
+            
+                        <div>
+            
+                            <h3 class="font-semibold text-lg">
+                                Alert Configuration
+                            </h3>
+            
+                            <p class="text-xs text-gray-500 mt-1">
+                                Configure thresholds used by the alert engine
+                            </p>
+            
+                        </div>
+            
+                    </div>
+            
+            
+                    <div
+                        class="grid grid-cols-1
+                               md:grid-cols-2
+                               xl:grid-cols-3
+                               gap-6">
+            
+            
+                        <!-- CPU THRESHOLD -->
+            
+                        <div>
+            
+                            <label
+                                class="block text-xs
+                                       uppercase tracking-wider
+                                       text-gray-500 mb-2">
+            
+                                CPU Warning Threshold
+            
+                            </label>
+            
+                            <input
+                                id="cpuThresholdInput"
+                                type="number"
+                                value="70"
+                                min="1"
+                                max="100"
+                                class="w-full bg-[#252b3d]
+                                       border border-[#394056]
+                                       rounded-lg px-4 py-3
+                                       text-sm outline-none
+                                       focus:border-blue-500">
+            
+                        </div>
+            
+            
+                        <!-- LATENCY THRESHOLD -->
+            
+                        <div>
+            
+                            <label
+                                class="block text-xs
+                                       uppercase tracking-wider
+                                       text-gray-500 mb-2">
+            
+                                Latency Threshold (ms)
+            
+                            </label>
+            
+                            <input
+                                id="latencyThresholdInput"
+                                type="number"
+                                value="170"
+                                min="1"
+                                class="w-full bg-[#252b3d]
+                                       border border-[#394056]
+                                       rounded-lg px-4 py-3
+                                       text-sm outline-none
+                                       focus:border-blue-500">
+            
+                        </div>
+            
+            
+                        <!-- ERROR THRESHOLD -->
+            
+                        <div>
+            
+                            <label
+                                class="block text-xs
+                                       uppercase tracking-wider
+                                       text-gray-500 mb-2">
+            
+                                Error Rate Threshold
+            
+                            </label>
+            
+                            <input
+                                id="errorThresholdInput"
+                                type="number"
+                                value="30"
+                                min="0"
+                                max="100"
+                                step="0.1"
+                                class="w-full bg-[#252b3d]
+                                       border border-[#394056]
+                                       rounded-lg px-4 py-3
+                                       text-sm outline-none
+                                       focus:border-blue-500">
+            
+                        </div>
+            
+                    </div>
+            
+                </div>
+            
+            
+                <!-- =============================================
+                     SYSTEM INFORMATION
+                ============================================== -->
+            
+                <div class="card p-6">
+            
+                    <div class="flex items-center gap-3 mb-6">
+            
+                        <div
+                            class="w-10 h-10 rounded-lg
+                                   bg-purple-500/10
+                                   flex items-center
+                                   justify-center
+                                   text-purple-400">
+            
+                            <i class="fa-solid fa-circle-info"></i>
+            
+                        </div>
+            
+                        <div>
+            
+                            <h3 class="font-semibold text-lg">
+                                System Information
+                            </h3>
+            
+                            <p class="text-xs text-gray-500 mt-1">
+                                Current environment and simulation details
+                            </p>
+            
+                        </div>
+            
+                    </div>
+            
+            
+                    <div
+                        class="grid grid-cols-2
+                               md:grid-cols-4 gap-6">
+            
+            
+                        <div>
+            
+                            <div
+                                class="text-xs uppercase
+                                       tracking-wider text-gray-500">
+            
+                                Version
+            
+                            </div>
+            
+                            <div class="mt-2 font-semibold">
+            
+                                0.8.1
+            
+                            </div>
+            
+                        </div>
+            
+            
+                        <div>
+            
+                            <div
+                                class="text-xs uppercase
+                                       tracking-wider text-gray-500">
+            
+                                Simulation Mode
+            
+                            </div>
+            
+                            <div
+                                id="settingsSimulationMode"
+                                class="mt-2 font-semibold">
+            
+                                NORMAL
+            
+                            </div>
+            
+                        </div>
+            
+            
+                        <div>
+            
+                            <div
+                                class="text-xs uppercase
+                                       tracking-wider text-gray-500">
+            
+                                Services
+            
+                            </div>
+            
+                            <div
+                                id="settingsServicesCount"
+                                class="mt-2 font-semibold">
+            
+                                0
+            
+                            </div>
+            
+                        </div>
+            
+            
+                        <div>
+            
+                            <div
+                                class="text-xs uppercase
+                                       tracking-wider text-gray-500">
+            
+                                Engine
+            
+                            </div>
+            
+                            <div
+                                class="mt-2 text-green-400
+                                       font-semibold">
+            
+                                ● Operational
+            
+                            </div>
+            
+                        </div>
+            
+                    </div>
+            
+                </div>
+            
+            
+            </div>
+          
+   
         </section>        
     </main>
 

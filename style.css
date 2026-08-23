@@ -205,3 +205,29 @@
     }
 
 }
+
+/* =====================================================
+   BONTONES LOG
+===================================================== */
+
+.log-filter{
+    padding:8px 14px;
+    border-radius:8px;
+    background:#252b3d;
+    border:1px solid #394056;
+    color:#94a3b8;
+    font-size:13px;
+    font-weight:600;
+    transition:.2s;
+}
+
+.log-filter:hover{
+    background:#30374b;
+    color:white;
+}
+
+.log-filter.active{
+    background:#006DE4;
+    border-color:#006DE4;
+    color:white;
+}
