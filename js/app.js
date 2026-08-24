@@ -1,7 +1,7 @@
 // ======================================================
 // OBSERVABILITY LABS
 // Dashboard de Observabilidad (Demo)
-// Versión: 0.9.0 
+// Versión: 1.0.0 funcional 
 // Autor: Luis Miguel Galacho + ChatGPT
 // ======================================================
 // ======================================================
@@ -154,7 +154,7 @@ function renderLogs(){
                 </div>
 
                 <div class="text-gray-400">
-                    No logs match the current filters.
+                    Ningún registro coincide con los filtros actuales.
                 </div>
 
             </div>
@@ -306,28 +306,28 @@ function renderLogsSummary(){
     const cards = [
 
         {
-            title: "Total Events",
+            title: "Total de eventos",
             value: total,
             icon: "fa-list",
             color: "#3b82f6"
         },
 
         {
-            title: "Info",
+            title: "Información",
             value: info,
             icon: "fa-circle-info",
             color: "#22c55e"
         },
 
         {
-            title: "Warnings",
+            title: "Advertencias",
             value: warning,
             icon: "fa-triangle-exclamation",
             color: "#f59e0b"
         },
 
         {
-            title: "Critical",
+            title: "Críticos",
             value: critical,
             icon: "fa-circle-exclamation",
             color: "#ef4444"
@@ -506,7 +506,7 @@ const serviceTopology = {
 const services = {
 
 gateway: {
-    name: "Gateway API",
+    name: "API Gateway",
     status: "HEALTHY",
 
     cpu: 15,
@@ -521,7 +521,7 @@ gateway: {
 },
 
    api: {
-    name: "Application API",
+    name: "API de Aplicación",
     status: "HEALTHY",
 
     cpu: 12,
@@ -536,7 +536,7 @@ gateway: {
 },
 
     database: {
-    name: "Database",
+    name: "Base de Datos",
     status: "HEALTHY",
 
     cpu: 18,
@@ -551,7 +551,7 @@ gateway: {
 },
 
    redis: {
-    name: "Redis Cache",
+    name: "Caché Redis",
     status: "HEALTHY",
 
     cpu: 8,
@@ -566,7 +566,7 @@ gateway: {
 },
 
     identity: {
-    name: "Identity Service",
+    name: "Servicio de Identidad",
     status: "HEALTHY",
 
     cpu: 10,
@@ -580,7 +580,7 @@ gateway: {
     autoHealing: true
 },
     notifications: {
-    name: "Notification Service",
+    name: "Servicio de Notificaciones",
     status: "HEALTHY",
 
     cpu: 6,
@@ -658,7 +658,7 @@ trend:1
 },
 
 {
-title:"Error Rate",
+title:"Tasa de errores",
 unit:"%",
 icon:"fa-circle-exclamation",
 color:"#ef4444",
@@ -680,7 +680,7 @@ trend:1
 },
 
 {
-title:"Memory",
+title:"Memoria",
 unit:"%",
 icon:"fa-memory",
 color:"#8b5cf6",
@@ -691,7 +691,7 @@ trend:1
 },
 
 {
-title:"Active Services",
+title:"Servicios activos",
 unit:"",
 icon:"fa-server",
 color:"#06b6d4",
@@ -988,7 +988,7 @@ function simulateSystem(){
     // 1. Evolución progresiva de usuarios hacia el objetivo del escenario
 const difference = simulation.targetUsers - system.users;
 
-// El sistema avanza aproximadamente un 10 % hacia el objetivo
+// El sistema avanza aproximadamente un 5 % hacia el objetivo
 let userDelta = difference * 0.05;
 
 // Añadimos una pequeña variación natural
@@ -1189,7 +1189,7 @@ function updateServiceStatus(service){
 
             "SERVICE",
 
-            `${service.name} status changed: ${previousStatus} → ${service.status}`
+            `${service.name} su estado ha cambiado: ${previousStatus} → ${service.status}`
 
         );
 
@@ -1368,12 +1368,12 @@ function renderKPIs(){
             // Latencia
             case 0:
 
-                if(system.latency < 120){
+                if(system.latency < thresholds.recovery.latency){
 
                     trend.innerHTML =
                     "<span class='text-green-400'><i class='fa-solid fa-check'></i> Excelente</span>";
 
-                }else if(system.latency < 170){
+                }else if(system.latency < thresholds.system.latency){
 
                     trend.innerHTML =
                     "<span class='text-yellow-400'><i class='fa-solid fa-triangle-exclamation'></i> Normal</span>";
@@ -1400,12 +1400,12 @@ function renderKPIs(){
             // Error Rate
             case 2:
 
-                if(system.errorRate < 0.10){
+                if(system.errorRate < thresholds.recovery.errorRate){
 
                     trend.innerHTML =
                     "<span class='text-green-400'>Sin incidencias</span>";
 
-                }else if(system.errorRate < 0.30){
+                }else if(system.errorRate < thresholds.system.errorRate){
 
                     trend.innerHTML =
                     "<span class='text-yellow-400'>Advertencias</span>";
@@ -1438,7 +1438,7 @@ function renderKPIs(){
             case 5:
 
         const totalServices =
-            Object.keys(services).length;
+        Object.keys(services).length;
         
         const healthyServices =
             Object.values(services)
@@ -1454,23 +1454,23 @@ function renderKPIs(){
                 )
                 .length;
         
-        const downServices =
+        const unavailableServices =
             Object.values(services)
                 .filter(service =>
                     service.status === "CRITICAL" ||
                     service.status === "DOWN"
                 )
                 .length;
+        
+        const activeServices =
+            totalServices - unavailableServices;
             
-                const activeServices =
-                    totalServices - downServices;
-            
-                if(downServices > 0){
+                if(unavailableServices > 0){
             
                     trend.innerHTML =
                     `<span class='text-red-400'>
                         🔴 ${activeServices} / ${totalServices} activos ·
-                        ${downServices} caído${downServices > 1 ? "s" : ""}
+                        ${unavailableServices} caído${unavailableServices > 1 ? "s" : ""}
                     </span>`;
             
                 }else if(warningServices > 0){
@@ -1537,17 +1537,17 @@ function renderDashboardOverview(){
         if(system.status === "HEALTHY"){
 
             message.textContent =
-                "System operating normally.";
+                "El sistema funciona con normalidad.";
 
         }else if(system.status === "DEGRADED"){
 
             message.textContent =
-                "System is operating with degraded conditions.";
+                "El sistema funciona en condiciones degradadas.";
 
         }else{
 
             message.textContent =
-                "Critical system conditions detected.";
+                "Se han detectado condiciones críticas en el sistema.";
 
         }
 
@@ -1651,7 +1651,7 @@ function renderDashboardOverview(){
     if(servicesLabel){
 
         servicesLabel.textContent =
-            `${healthyServices} / ${totalServices} healthy`;
+            `${healthyServices} / ${totalServices} OPERATIVOS`;
 
     }
 
@@ -1753,7 +1753,7 @@ function renderDashboardOverview(){
 
         conditionCPU.textContent =
             systemState.cpuHigh
-                ? "HIGH"
+                ? "ALTO"
                 : "NORMAL";
 
         conditionCPU.className =
@@ -1768,7 +1768,7 @@ function renderDashboardOverview(){
 
         conditionLatency.textContent =
             systemState.latencyHigh
-                ? "HIGH"
+                ? "ALTO"
                 : "NORMAL";
 
         conditionLatency.className =
@@ -1783,7 +1783,7 @@ function renderDashboardOverview(){
 
         conditionErrors.textContent =
             systemState.errorHigh
-                ? "HIGH"
+                ? "ALTO"
                 : "NORMAL";
 
         conditionErrors.className =
@@ -1797,7 +1797,7 @@ function renderDashboardOverview(){
     if(conditionServices){
 
         conditionServices.textContent =
-            `${healthyServices} / ${totalServices} HEALTHY`;
+            `${healthyServices} / ${totalServices} OPERATIVOS`;
 
         conditionServices.className =
             healthyServices === totalServices
@@ -1824,7 +1824,7 @@ function renderDashboardOverview(){
 
             recentEvents.innerHTML =
                 `<div class="text-gray-500">
-                    No recent events.
+                    No hay eventos recientes.
                 </div>`;
 
         }else{
@@ -1865,6 +1865,7 @@ function renderDashboardOverview(){
 }
 
 let assessmentPreviousStatus = null;
+let assessmentRecoveryUntil = 0;
 
 
 
@@ -2035,7 +2036,7 @@ function renderLogs(){
 
             <div class="p-8 text-center text-gray-500">
 
-                No events match the current filters.
+                No hay eventos que coincidan con los filtros actuales.
 
             </div>
 
@@ -2163,7 +2164,7 @@ function renderLogs(){
     if(resultCount){
 
         resultCount.textContent =
-            `${filteredLogs.length} events`;
+            `${filteredLogs.length} eventos`;
 
     }
 
@@ -2371,7 +2372,7 @@ function renderLogs(){
 
         container.innerHTML = `
             <div class="p-8 text-center text-gray-500">
-                No logs available
+                No hay registros disponibles
             </div>
         `;
 
@@ -2540,7 +2541,7 @@ function evaluateAlerts(){
             createAlert(
                 "WARNING",
                 "CPU",
-                "High CPU usage detected"
+                "Uso elevado de CPU detectado"
             );
 
         }
@@ -2565,7 +2566,7 @@ function evaluateAlerts(){
             createAlert(
                 "CRITICAL",
                 "LATENCY",
-                "High latency detected"
+                "Latencia elevada detectada"
             );
 
         }
@@ -2588,9 +2589,9 @@ function evaluateAlerts(){
         if(!exists){
 
             createAlert(
-                "ERROR",
+                "CRITICAL",
                 "ERRORS",
-                "High error rate detected"
+                "Tasa de errores elevada detectada"
             );
 
         }
@@ -2651,7 +2652,7 @@ function renderAlerts(){
                 </div>
 
                 <div class="text-gray-400">
-                    No active alerts detected.
+                    No se han detectado alertas activas.
                 </div>
 
             </div>
@@ -2726,7 +2727,7 @@ function renderAlerts(){
             <div class="p-10 text-center
                         text-gray-500">
 
-                No resolved alerts yet.
+                Todavía no hay alertas resueltas.
 
             </div>
 
@@ -2802,10 +2803,10 @@ function renderAlerts(){
     if(activeCount){
 
         activeCount.textContent =
-            `${activeAlerts.length} active ${
+            `${activeAlerts.length}  ${
                 activeAlerts.length === 1
-                    ? "alert"
-                    : "alerts"
+                    ? "alerta activa"
+                    : "alertas activas"
             }`;
 
     }
@@ -2816,15 +2817,33 @@ function renderAlerts(){
 // ======================================================
 function renderOperationalAssessment(){
 
-    const statusElement = document.getElementById("assessmentStatus");
-    const situationElement = document.getElementById("assessmentSituation");
-    const detailsElement = document.getElementById("assessmentDetails");
-    const impactElement = document.getElementById("assessmentImpact");
-    const conclusionElement = document.getElementById("assessmentConclusion");
-    const servicesElement = document.getElementById("assessmentServices");
-    const alertsElement = document.getElementById("assessmentAlerts");
-    const scenarioElement = document.getElementById("assessmentScenario");
-    const updatedElement = document.getElementById("assessmentUpdated");
+    const statusElement =
+        document.getElementById("assessmentStatus");
+
+    const situationElement =
+        document.getElementById("assessmentSituation");
+
+    const detailsElement =
+        document.getElementById("assessmentDetails");
+
+    const impactElement =
+        document.getElementById("assessmentImpact");
+
+    const conclusionElement =
+        document.getElementById("assessmentConclusion");
+
+    const servicesElement =
+        document.getElementById("assessmentServices");
+
+    const alertsElement =
+        document.getElementById("assessmentAlerts");
+
+    const scenarioElement =
+        document.getElementById("assessmentScenario");
+
+    const updatedElement =
+        document.getElementById("assessmentUpdated");
+
 
     if(
         !statusElement ||
@@ -2840,48 +2859,55 @@ function renderOperationalAssessment(){
         return;
     }
 
-    // ==================================================
-    // SERVICIOS
-    // ==================================================
-
-    const serviceList = Object.values(services);
-
-    const totalServices = serviceList.length;
-
-    const healthyServices = serviceList.filter(
-        service => service.status === "HEALTHY"
-    ).length;
-
-    const warningServices = serviceList.filter(
-        service => service.status === "WARNING"
-    ).length;
-
-    const criticalServices = serviceList.filter(
-        service =>
-            service.status === "CRITICAL" ||
-            service.status === "DOWN"
-    ).length;
-
 
     // ==================================================
-    // ALERTAS
+    // SERVICES
     // ==================================================
 
-    const activeAlerts =
-        alerts.filter(alert =>
-            alert.status === "ACTIVE"
+    const serviceList =
+        Object.values(services);
+
+    const totalServices =
+        serviceList.length;
+
+    const healthyServices =
+        serviceList.filter(
+            service => service.status === "HEALTHY"
+        ).length;
+
+    const warningServices =
+        serviceList.filter(
+            service => service.status === "WARNING"
+        ).length;
+
+    const criticalServices =
+        serviceList.filter(
+            service =>
+                service.status === "CRITICAL" ||
+                service.status === "DOWN"
         ).length;
 
 
     // ==================================================
-    // ESTADO GLOBAL
+    // ACTIVE ALERTS
     // ==================================================
 
-    const globalStatus = system.status;
+    const activeAlerts =
+        alerts.filter(
+            alert => alert.status === "ACTIVE"
+        ).length;
 
 
     // ==================================================
-    // ESCENARIO
+    // REAL SYSTEM STATUS
+    // ==================================================
+
+    const currentStatus =
+        system.status;
+
+
+    // ==================================================
+    // SCENARIO
     // ==================================================
 
     const scenario =
@@ -2891,153 +2917,314 @@ function renderOperationalAssessment(){
 
 
     // ==================================================
-    // RECOVERY VISUAL
+    // RECOVERY DETECTION
     // ==================================================
 
-    let displayStatus = globalStatus;
-
-    if(
-        globalStatus === "HEALTHY" &&
+    const recoveryStarted =
         (
-            assessmentPreviousStatus === "DEGRADED" ||
-            assessmentPreviousStatus === "CRITICAL"
-        )
-    ){
+            assessmentPreviousStatus === "CRITICAL" &&
+            (
+                currentStatus === "DEGRADED" ||
+                currentStatus === "HEALTHY"
+            )
+        ) ||
+        (
+            assessmentPreviousStatus === "DEGRADED" &&
+            currentStatus === "HEALTHY"
+        );
 
-        displayStatus = "RECOVERING";
+
+    if(recoveryStarted){
+
+        // Mantener el estado visual RECOVERING
+        // durante unos segundos.
+
+        assessmentRecoveryUntil =
+            Date.now() + 6000;
 
     }
 
 
+    const isRecovering =
+        Date.now() < assessmentRecoveryUntil;
+
+
     // ==================================================
-    // CONTENIDO POR ESTADO
+    // ESTADO VISUAL DEL ASSESSMENT
     // ==================================================
 
+    let displayStatus =
+        isRecovering
+            ? "RECOVERING"
+            : currentStatus;
+
+
+    // ==================================================
+    // CONTENIDO
+    // ==================================================
+
+    let statusIcon = "";
     let situation = "";
     let details = "";
     let impact = "";
     let conclusion = "";
-    let statusIcon = "";
 
+
+    // ==================================================
+    // HEALTHY
+    // ==================================================
 
     if(displayStatus === "HEALTHY"){
 
         statusIcon = "🟢";
 
         situation =
-            "System is operating within normal conditions.";
+            "El sistema funciona dentro de condiciones normales.";
 
         details =
-            "All monitored indicators are currently within their configured thresholds.";
+            "Todos los indicadores monitorizados están dentro de los umbrales configurados.";
 
         impact =
-            "No significant service degradation detected.";
+            "No se ha detectado una degradación significativa de los servicios.";
 
         conclusion =
-            "🟢 No intervention required.";
+            "🟢 No se requiere intervención.";
 
     }
 
+
+    // ==================================================
+    // DEGRADED
+    // ==================================================
 
     else if(displayStatus === "DEGRADED"){
 
         statusIcon = "🟡";
 
         situation =
-            "System is operating under degraded conditions.";
+            "El sistema funciona en condiciones degradadas.";
 
-        const degradedConditions = [];
+        const conditions = [];
 
         if(system.cpu > 70){
-            degradedConditions.push("CPU utilization is above its configured threshold");
-        }
 
-        if(system.latency > 170){
-            degradedConditions.push("latency is above its configured threshold");
-        }
-
-        if(warningServices > 0){
-
-            degradedConditions.push(
-                `${warningServices} service${warningServices > 1 ? "s are" : " is"} reporting warnings`
+            conditions.push(
+                "El uso de CPU está por encima de su umbral configurado."
             );
 
         }
 
-        details =
-            degradedConditions.length > 0
-                ? degradedConditions.join(". ") + "."
-                : "Some monitored conditions require continued observation.";
+        if(system.latency > 170){
+
+            conditions.push(
+                "La latencia está por encima de su umbral configurado."
+            );
+
+        }
+
+        if(warningServices > 0){
+
+            conditions.push(
+                `${warningServices} ${
+                    warningServices === 1
+                        ? "servicio está"
+                        : "servicios están"
+                } reportando advertencias`
+            );
+
+        }
+
+
+        if(conditions.length === 0){
+
+            details =
+                "Algunas condiciones monitorizadas requieren seguimiento continuo.";
+
+        }
+        else if(conditions.length === 1){
+
+            details =
+                `${conditions[0]}.`;
+
+        }
+        else if(
+            conditions.includes(
+                "El uso de CPU está por encima de sus umbrales configurados."
+            ) &&
+            conditions.includes(
+                "y la latencia está por encima de sus umbrales configurados."
+            )
+        ){
+
+            const remaining =
+                conditions.filter(condition =>
+                    condition !==
+                        "El uso de CPU está por encima de sus umbrales configurados." &&
+                    condition !==
+                        "y la latencia está por encima de sus umbrales configurados."
+                );
+
+            details =
+                "El uso de CPU y la latencia están por encima de sus umbrales configurados.";
+
+            if(remaining.length > 0){
+
+                details +=
+                    ` ${remaining.join(". ")}.`;
+
+            }
+
+        }
+        else{
+
+            details =
+                `${conditions.slice(0, -1).join(", ")} and ${conditions.at(-1)}.`;
+
+        }
+
 
         impact =
-            "Performance degradation is present, but core platform services remain operational.";
+            "Existe una degradación del rendimiento, pero los servicios principales de la plataforma permanecen operativos.";
 
         conclusion =
-            "🟡 Continued monitoring recommended.";
+            "🟡 Se recomienda continuar con la monitorización.";
 
     }
 
+
+    // ==================================================
+    // CRITICAL
+    // ==================================================
 
     else if(displayStatus === "CRITICAL"){
 
         statusIcon = "🔴";
 
         situation =
-            "System is operating under critical conditions.";
+            "El sistema funciona en condiciones críticas.";
 
-        const criticalConditions = [];
+        const conditions = [];
 
         if(criticalServices > 0){
 
-            criticalConditions.push(
-                `${criticalServices} service${criticalServices > 1 ? "s are" : " is"} in a critical or unavailable state`
+            conditions.push(
+                `${criticalServices} ${
+                    criticalServices === 1
+                        ? "servicio está"
+                        : "servicios están"
+                } en estado crítico o no disponible/s`
             );
 
         }
 
         if(system.errorRate > 0.30){
 
-            criticalConditions.push(
-                "error rate is above its configured critical threshold"
+            conditions.push(
+                "la tasa de errores está por encima de su umbral crítico configurado."
             );
 
         }
 
-        details =
-            criticalConditions.length > 0
-                ? criticalConditions.join(". ") + "."
-                : "Critical conditions have been detected in the platform.";
+
+        if(conditions.length === 0){
+
+            details =
+                "Se han detectado condiciones críticas en la plataforma.";
+
+        }
+        else if(conditions.length === 1){
+
+            details =
+                `${conditions[0]}.`;
+
+        }
+        else{
+
+            details =
+                `${conditions[0]}. ${conditions[1]}.`;
+
+        }
+
 
         impact =
-            "Service availability or platform reliability is currently affected.";
+            "La disponibilidad de los servicios o la fiabilidad de la plataforma están actualmente afectadas.";
 
         conclusion =
-            "🔴 Immediate investigation recommended.";
+            "🔴 Se recomienda una investigación inmediata.";
 
     }
 
+
+    // ==================================================
+    // RECOVERING
+    // ==================================================
 
     else if(displayStatus === "RECOVERING"){
 
         statusIcon = "🔵";
 
         situation =
-            "System is recovering from a previous degraded condition.";
+            "El sistema se está recuperando de una condición degradada anterior.";
+
+        const recoveryDetails = [];
+
+        if(healthyServices > 0){
+
+            recoveryDetails.push(
+                `${healthyServices} ${
+                    healthyServices === 1
+                        ? "servicio ha"
+                        : "servicios han"
+                } vuelto a un estado saludable`
+            );
+
+        }
+
+        if(warningServices > 0){
+
+            recoveryDetails.push(
+                `${warningServices} ${
+                    warningServices === 1
+                        ? "servicio permanece"
+                        : "servicios permanecen"
+                } en estado de advertencia`
+            );
+
+        }
+
+        if(criticalServices > 0){
+
+            recoveryDetails.push(
+                `${criticalServices} ${
+                    criticalServices === 1
+                        ? "servicio permanece"
+                        : "servicios permanecen"
+                } en estado crítico`
+            );
+
+        }
+
 
         details =
-            "Monitored indicators have returned to acceptable ranges and service conditions are stabilizing.";
+            recoveryDetails.length > 0
+                ? `${recoveryDetails.join(". ")}.`
+                : "Las condiciones monitorizadas están volviendo a la normalidad.";
+
 
         impact =
-            "Previous degradation is clearing. Platform operations are returning to normal.";
+            currentStatus === "HEALTHY"
+                ? "La degradación anterior se ha resuelto y las operaciones de la plataforma se están estabilizando."
+                : "Las condiciones de la plataforma están mejorando, pero persiste cierta degradación.";
+
 
         conclusion =
-            "🔵 Recovery in progress — continue monitoring.";
+            "🔵 Recuperación en curso — continuar con la monitorización.";
 
     }
 
 
     // ==================================================
-    // RENDER STATUS
+    // RENDER
     // ==================================================
 
     statusElement.textContent =
@@ -3064,13 +3251,13 @@ function renderOperationalAssessment(){
     // OPERATIONAL SNAPSHOT
     // ==================================================
 
-    servicesElement.textContent =
-        `${healthyServices} / ${totalServices} HEALTHY`;
+    let serviceSummary =
+        `${healthyServices} / ${totalServices} OPERATIVOS`;
 
 
     if(warningServices > 0){
 
-        servicesElement.textContent +=
+        serviceSummary +=
             ` · ${warningServices} WARNING`;
 
     }
@@ -3078,10 +3265,14 @@ function renderOperationalAssessment(){
 
     if(criticalServices > 0){
 
-        servicesElement.textContent +=
+        serviceSummary +=
             ` · ${criticalServices} CRITICAL`;
 
     }
+
+
+    servicesElement.textContent =
+        serviceSummary;
 
 
     alertsElement.textContent =
@@ -3093,14 +3284,22 @@ function renderOperationalAssessment(){
 
 
     updatedElement.textContent =
-        new Date().toLocaleTimeString();
+        new Date().toLocaleTimeString(
+            "es-ES",
+            {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            }
+        );
 
 
     // ==================================================
     // GUARDAMOS EL ESTADO REAL
     // ==================================================
 
-    assessmentPreviousStatus = globalStatus;
+    assessmentPreviousStatus =
+        currentStatus;
 
 }
 
@@ -3153,28 +3352,28 @@ function renderAlertsSummary(){
     const cards = [
 
         {
-            title: "Critical",
+            title: "Críticas",
             value: criticalAlerts,
             icon: "fa-circle-exclamation",
             color: "#ef4444"
         },
 
         {
-            title: "Warnings",
+            title: "Advertencias",
             value: warningAlerts,
             icon: "fa-triangle-exclamation",
             color: "#f59e0b"
         },
 
         {
-            title: "Active Alerts",
+            title: "Alertas activas",
             value: activeAlerts,
             icon: "fa-bell",
             color: "#3b82f6"
         },
 
         {
-            title: "Resolved",
+            title: "Resueltas",
             value: resolvedAlerts,
             icon: "fa-circle-check",
             color: "#22c55e"
@@ -3277,17 +3476,17 @@ function renderDashboardOverview(){
         if(system.status === "HEALTHY"){
 
             messageElement.textContent =
-                "System operating normally.";
+                "El sistema funciona con normalidad.";
 
         }else if(system.status === "DEGRADED"){
 
             messageElement.textContent =
-                "System is experiencing degraded performance.";
+                "El sistema está experimentando un rendimiento degradado.";
 
         }else{
 
             messageElement.textContent =
-                "System is experiencing critical conditions.";
+                "El sistema está experimentando condiciones críticas.";
 
         }
 
@@ -3402,7 +3601,7 @@ function renderDashboardOverview(){
     if(servicesElement){
 
         servicesElement.textContent =
-            `${healthyServices} / ${totalServices} HEALTHY`;
+            `${healthyServices} / ${totalServices} OPERATIVOS`;
 
     }
 
@@ -3556,7 +3755,7 @@ function renderDashboardOverview(){
     if(conditionServices){
 
         conditionServices.textContent =
-            `${healthyServices} / ${totalServices} HEALTHY`;
+            `${healthyServices} / ${totalServices} OPERATIVOS`;
 
     }
 
@@ -3636,7 +3835,7 @@ function renderSettings(){
         if(simulationPaused){
     
             engineStatus.innerHTML =
-                "● Paused";
+                "● Pausado";
     
             engineStatus.className =
                 "mt-2 text-yellow-400 font-semibold";
@@ -3644,7 +3843,7 @@ function renderSettings(){
         } else {
     
             engineStatus.innerHTML =
-                "● Running";
+                "● En ejecución";
     
             engineStatus.className =
                 "mt-2 text-green-400 font-semibold";
@@ -3661,7 +3860,7 @@ function renderSettings(){
             toggleButton.innerHTML = `
     
                 <i class="fa-solid fa-play mr-2"></i>
-                Resume Simulation
+                Reanudar simulación
     
             `;
     
@@ -3670,7 +3869,7 @@ function renderSettings(){
             toggleButton.innerHTML = `
     
                 <i class="fa-solid fa-pause mr-2"></i>
-                Pause Simulation
+                Pausar simulación
     
             `;
     
@@ -3724,8 +3923,15 @@ function renderSettings(){
 
     if(servicesCount){
 
+        const activeServices =
+            Object.values(services)
+                .filter(service =>
+                    service.status !== "DOWN"
+                )
+                .length;
+
         servicesCount.textContent =
-            services.length;
+            activeServices;
 
     }
 
@@ -3792,10 +3998,10 @@ function renderTimeline(){
 
     const typeLabels = {
 
-        engine: "ENGINE",
-        scenario: "SCENARIO",
-        system: "SYSTEM",
-        service: "SERVICE"
+        engine: "MOTOR",
+        scenario: "ESCENARIO",
+        system: "SISTEMA",
+        service: "SERVICIO"
 
     };
 
@@ -3803,7 +4009,7 @@ function renderTimeline(){
 
         const type = event.type || "system";
 
-        const label = typeLabels[type] || "SYSTEM";
+        const label = typeLabels[type] || "SISTEMA";
 
         container.innerHTML += `
 
@@ -3904,14 +4110,14 @@ else if(service.healthScore <= 70){
 
 <div class="text-sm text-gray-300">
 
-    Requests:
+    Solicitudes:
     <strong>${service.requests}</strong>
 
 </div>
 <div class="mt-3">
 
     <div class="flex justify-between text-xs text-gray-400 mb-1">
-        <span>Health</span>
+        <span>Nivel Operativo</span>
         <span>${Math.round(service.healthScore)}%</span>
     </div>
 
@@ -3954,7 +4160,7 @@ function resetSimulation(){
     // SIMULATION CONTROL
     // ==================================================
 
-    simulationPaused = false;
+    simulationPaused = true;
 
     simulation.currentScenario = "NORMAL";
 
@@ -3962,7 +4168,7 @@ function resetSimulation(){
 
     simulation.currentUsers = 500;
 
-    simulation.engineState = "Running";
+    simulation.engineState = "Paused";
 
     simulation.tick = 0;
 
@@ -3991,7 +4197,7 @@ function resetSimulation(){
 
     system.errorRate = 0.05;
 
-    system.services = 0;
+    system.services = Object.keys(services).length;
 
     system.status = "HEALTHY";
 
@@ -4061,7 +4267,10 @@ function resetSimulation(){
     // LATENCY HISTORY
     // ==================================================
 
-    latencyHistory.fill(system.latency);
+    latencyChart.data.datasets[0].data =
+        new Array(60).fill(0);
+
+    latencyChart.update();
 
 
     // ==================================================
@@ -4183,7 +4392,7 @@ function renderServicesView(){
         <div class="card p-5">
 
             <div class="text-xs uppercase tracking-widest text-gray-400">
-                Total Services
+                Servicios Totales
             </div>
 
             <div class="text-3xl font-bold mt-2">
@@ -4196,7 +4405,7 @@ function renderServicesView(){
         <div class="card p-5">
 
             <div class="text-xs uppercase tracking-widest text-gray-400">
-                Healthy
+                Operativos
             </div>
 
             <div class="text-3xl font-bold mt-2 text-green-400">
@@ -4209,7 +4418,7 @@ function renderServicesView(){
         <div class="card p-5">
 
             <div class="text-xs uppercase tracking-widest text-gray-400">
-                Warning
+                Advertencia
             </div>
 
             <div class="text-3xl font-bold mt-2 text-yellow-400">
@@ -4222,7 +4431,7 @@ function renderServicesView(){
         <div class="card p-5">
 
             <div class="text-xs uppercase tracking-widest text-gray-400">
-                Critical / Down
+                Crítico / Caido
             </div>
 
             <div class="text-3xl font-bold mt-2 text-red-400">
@@ -4325,7 +4534,7 @@ function renderServicesView(){
 
                         <div class="text-xs text-gray-400 mt-1">
 
-                            Dependencies:
+                            Dependencias:
                             ${dependencies}
 
                         </div>
@@ -4364,7 +4573,7 @@ function renderServicesView(){
                     <div class="bg-[#252b3d] rounded-lg p-3">
 
                         <div class="text-xs text-gray-400">
-                            Memory
+                            Memoria
                         </div>
 
                         <strong>
@@ -4377,7 +4586,7 @@ function renderServicesView(){
                     <div class="bg-[#252b3d] rounded-lg p-3">
 
                         <div class="text-xs text-gray-400">
-                            Latency
+                            Latencia
                         </div>
 
                         <strong>
@@ -4390,7 +4599,7 @@ function renderServicesView(){
                     <div class="bg-[#252b3d] rounded-lg p-3">
 
                         <div class="text-xs text-gray-400">
-                            Requests
+                            Solicitudes
                         </div>
 
                         <strong>
@@ -4410,7 +4619,7 @@ function renderServicesView(){
                         class="flex justify-between text-xs text-gray-400 mb-2">
 
                         <span>
-                            Health Score
+                            Nivel Operativo
                         </span>
 
                         <span>
@@ -4560,7 +4769,7 @@ function renderServiceDependencyMap(){
 
                 <div class="text-xs text-gray-400 mt-2">
 
-                    Latency
+                    Latencia
 
                 </div>
 
@@ -4573,7 +4782,7 @@ function renderServiceDependencyMap(){
 
                 <div class="text-xs text-gray-400 mt-2">
 
-                    Health
+                    Operatividad
 
                 </div>
 
@@ -4719,38 +4928,38 @@ function updateGlobalSystemStatus(){
     // ==================================================
     // ESTADO CRÍTICO
     // ==================================================
-
+    
     if(
         criticalServices > 0 ||
-        system.errorRate > 0.30
+        system.errorRate > thresholds.system.errorRate
     ){
-
+    
         system.status = "CRITICAL";
-
+    
     }
-
+    
     // ==================================================
     // ESTADO DEGRADADO
     // ==================================================
-
+    
     else if(
         warningServices > 0 ||
-        system.cpu > 70 ||
-        system.latency > 170
+        system.cpu > thresholds.system.cpu ||
+        system.latency > thresholds.system.latency
     ){
-
+    
         system.status = "DEGRADED";
-
+    
     }
-
+    
     // ==================================================
     // ESTADO SALUDABLE
     // ==================================================
-
+    
     else{
-
+    
         system.status = "HEALTHY";
-
+    
     }
 
     // ==================================================
@@ -4783,7 +4992,7 @@ function updateGlobalSystemStatus(){
     
             statusIcons[system.status],
     
-            `SYSTEM STATUS: ${previousStatus} → ${system.status}`,
+            `Estado del Sistema: ${previousStatus} → ${system.status}`,
     
             "system"
     
@@ -4799,7 +5008,7 @@ function updateGlobalSystemStatus(){
     
             "SYSTEM",
     
-            `System status changed: ${previousStatus} → ${system.status}`
+            `El estado del sistema ha cambiado: ${previousStatus} → ${system.status}`
     
         );
     
@@ -4986,6 +5195,47 @@ function renderSimulationPanel(){
     document.getElementById("currentUsers").textContent =
         system.users;
 
+
+    const engineStatus =
+        document.getElementById("engineStatus");
+
+    if(engineStatus){
+
+        if(simulationPaused){
+
+            engineStatus.textContent =
+                "⏸ Pausado";
+
+            engineStatus.className =
+                "engine-paused";
+
+        }else{
+
+            engineStatus.textContent =
+                "● En ejecución";
+
+            engineStatus.className =
+                "engine-running";
+
+        }
+
+    }
+
+
+    const toggleButton =
+        document.getElementById(
+            "toggleSimulationButton"
+        );
+
+    if(toggleButton){
+
+        toggleButton.textContent =
+            simulationPaused
+                ? "▶ Reanudar simulación"
+                : "⏸ Pausar simulación";
+
+    }
+
 }
 
     // =====================================================
@@ -4993,7 +5243,7 @@ function renderSimulationPanel(){
     // =====================================================
 addTimelineEvent(
     "🚀",
-    "Simulation Engine iniciado",
+    "Inicio del Motor de Simulación",
     "engine"
 
 );
@@ -5001,7 +5251,7 @@ addTimelineEvent(
 addLog(
     "INFO",
     "ENGINE",
-    "Simulation Engine started successfully"
+    "El motor de simulación se ha iniciado correctamente"
 );
 
 // Ejecución inicial y temporizador unificado cada 2 segundos
@@ -5184,7 +5434,7 @@ function renderAPMSummary(){
     const metrics = [
 
         {
-            title: "Latency",
+            title: "Latencia",
             value: `${system.latency.toFixed(0)} ms`,
             icon: "⚡"
         },
@@ -5196,13 +5446,13 @@ function renderAPMSummary(){
         },
 
         {
-            title: "Error Rate",
+            title: "Tasa de Error",
             value: `${system.errorRate.toFixed(2)} %`,
             icon: "⚠️"
         },
 
         {
-            title: "Active Users",
+            title: "Usuarios Activos",
             value: system.users,
             icon: "👥"
         }
@@ -5270,7 +5520,7 @@ function renderAPMPerformance(){
     const metrics = [
 
         {
-            name: "CPU Usage",
+            name: "Uso de la CPU",
             value: system.cpu,
             unit: "%",
             warning: 70,
@@ -5278,7 +5528,7 @@ function renderAPMPerformance(){
         },
 
         {
-            name: "Memory Usage",
+            name: "Uso de la Memoria",
             value: system.memory,
             unit: "%",
             warning: 75,
@@ -5286,7 +5536,7 @@ function renderAPMPerformance(){
         },
 
         {
-            name: "Response Latency",
+            name: "Latencia de respuesta",
             value: system.latency,
             unit: " ms",
             warning: 170,
@@ -5391,7 +5641,7 @@ function renderAPMHealth(){
 
     let icon = "🟢";
     let color = "#22c55e";
-    let title = "Healthy";
+    let title = "Operativo";
     let description =
         "La aplicación funciona dentro de los parámetros esperados.";
 
@@ -5400,7 +5650,7 @@ function renderAPMHealth(){
 
         icon = "🟡";
         color = "#f59e0b";
-        title = "Degraded";
+        title = "Degradado";
 
         description =
             "Se han detectado métricas por encima de los niveles recomendados.";
@@ -5412,7 +5662,7 @@ function renderAPMHealth(){
 
         icon = "🔴";
         color = "#ef4444";
-        title = "Critical";
+        title = "Crítico";
 
         description =
             "La aplicación presenta condiciones que requieren atención inmediata.";
@@ -5466,7 +5716,7 @@ function renderAPMHealth(){
 
                     <div class="text-xs text-gray-400">
 
-                        Services
+                        Servicios
 
                     </div>
 
@@ -5500,7 +5750,7 @@ function renderAPMHealth(){
 
                     <div class="text-xs text-gray-400">
 
-                        Errors
+                        Porcentaje de errores
 
                     </div>
 
@@ -5673,25 +5923,25 @@ function renderInfrastructureSummary(){
     const metrics = [
 
         {
-            title: "CPU Usage",
+            title: "Uso de CPU",
             value: `${system.cpu.toFixed(0)}%`,
             icon: "🖥️"
         },
 
         {
-            title: "Memory Usage",
+            title: "Uso de memoria",
             value: `${system.memory.toFixed(0)}%`,
             icon: "💾"
         },
 
         {
-            title: "Active Services",
+            title: "Servicios activos",
             value: activeServices,
             icon: "⚙️"
         },
 
         {
-            title: "Connected Users",
+            title: "Usuarios conectados",
             value: system.users,
             icon: "👥"
         }
@@ -5774,7 +6024,7 @@ function renderInfrastructureResources(){
         },
 
         {
-            name: "Memory",
+            name: "Memoria",
             value: system.memory,
             unit: "%",
             warning: 75,
@@ -5782,7 +6032,7 @@ function renderInfrastructureResources(){
         },
 
         {
-            name: "Network Load",
+            name: "Carga de red",
             value: networkLoad,
             unit: "%",
             warning: 75,
@@ -5902,14 +6152,14 @@ function renderInfrastructureCapacity(){
 
     let icon = "🟢";
     let color = "#22c55e";
-    let title = "Healthy Capacity";
+    let title = "Capacidad operativa";
 
 
     if(capacity < 70){
 
         icon = "🟡";
         color = "#f59e0b";
-        title = "Reduced Capacity";
+        title = "Capacidad reducida";
 
     }
 
@@ -5918,7 +6168,7 @@ function renderInfrastructureCapacity(){
 
         icon = "🔴";
         color = "#ef4444";
-        title = "Critical Capacity";
+        title = "Capacidad crítica";
 
     }
 
@@ -5991,7 +6241,7 @@ function renderInfrastructureCapacity(){
 
                 <div class="text-xs text-gray-400">
 
-                    Memory
+                    Memoria
 
                 </div>
 
@@ -6008,7 +6258,7 @@ function renderInfrastructureCapacity(){
 
                 <div class="text-xs text-gray-400">
 
-                    Services
+                    Servicios
 
                 </div>
 
@@ -6041,7 +6291,7 @@ function renderInfrastructureNodes(){
     const nodes = [
 
         {
-            name: "Compute Node",
+            name: "Nodo de cómputo",
             services: [
                 "gateway",
                 "api"
@@ -6049,7 +6299,7 @@ function renderInfrastructureNodes(){
         },
 
         {
-            name: "Application Node",
+            name: "Nodo de aplicación",
             services: [
                 "identity",
                 "notifications"
@@ -6057,7 +6307,7 @@ function renderInfrastructureNodes(){
         },
 
         {
-            name: "Data Node",
+            name: "Nodo de datos",
             services: [
                 "database",
                 "redis"
@@ -6146,7 +6396,7 @@ function renderInfrastructureNodes(){
 
                         <div class="text-xs text-gray-400 mt-1">
 
-                            ${node.services.length} services
+                            ${node.services.length} servicios
 
                         </div>
 
@@ -6183,7 +6433,7 @@ function renderInfrastructureNodes(){
                     <div class="flex justify-between">
 
                         <span class="text-gray-400">
-                            Memory
+                            Memoria
                         </span>
 
                         <strong>
@@ -6196,7 +6446,7 @@ function renderInfrastructureNodes(){
                     <div class="flex justify-between">
 
                         <span class="text-gray-400">
-                            Health
+                            Puntuación operativa
                         </span>
 
                         <strong
@@ -6217,7 +6467,7 @@ function renderInfrastructureNodes(){
 
                     <div class="text-xs text-gray-400 mb-2">
 
-                        Hosted Services
+                        Servicios alojados
 
                     </div>
 
@@ -6322,39 +6572,43 @@ function tick(){
 
     renderSettings();
 
-    // ======================================================
-    // SIMULATION CONTROLS
-    // ======================================================
-
-    function initializeSimulationControls(){
-
-        const toggleButton =
-            document.getElementById(
-                "toggleSimulationButton"
-            );
-
-        if(!toggleButton) return;
-
-
-        toggleButton.addEventListener("click", () => {
-
-            simulationPaused =
-                !simulationPaused;
-
-            renderSettings();
-
-        });
-
-    }
-
-
-
 
     // ==============================================
     // CHARTS
     // ==============================================
 
     updateLatencyChartVisuals();
+
+}
+
+// ======================================================
+// CONTROLES DE SIMULACIÓN
+// ======================================================
+
+function initializeSimulationControls(){
+
+    const toggleButton =
+        document.getElementById(
+            "toggleSimulationButton"
+        );
+
+    if(!toggleButton) return;
+
+    toggleButton.addEventListener("click", () => {
+
+        simulationPaused =
+            !simulationPaused;
+    
+        simulation.engineState =
+            simulationPaused
+                ? "Paused"
+                : "Running";
+    
+        renderSettings();
+    
+        renderSimulationPanel();
+    
+    });
 
 }
 
@@ -6378,19 +6632,19 @@ document.getElementById('scenarioSelect').addEventListener('change', (event) => 
         );
 
     console.log(
-        `Escenario: ${selectedScenario} | Target: ${simulation.targetUsers}`
+        `Situación: ${selectedScenario} | Target: ${simulation.targetUsers}`
     );
     
     addTimelineEvent(
         "🎯",
-        `Escenario ${selectedScenario} activado (Objetivo: ${simulation.targetUsers} usuarios)`,
+        `Situación ${selectedScenario} activado (Objetivo: ${simulation.targetUsers} usuarios)`,
         "scenario"
     );
 
     addLog(
         "INFO",
         "SCENARIO",
-        `Scenario changed to ${selectedScenario}. Target users: ${simulation.targetUsers}`
+        `La situación ha cambiado a ${selectedScenario}. Target users: ${simulation.targetUsers}`
     );
 
 
@@ -6401,6 +6655,21 @@ document.getElementById('scenarioSelect').addEventListener('change', (event) => 
 // ======================================================
 
 initializeLogFilters();
+
+
+const resetButton =
+    document.getElementById(
+        "resetSimulationButton"
+    );
+
+if(resetButton){
+
+    resetButton.addEventListener(
+        "click",
+        resetSimulation
+    );
+
+}
 
 // ======================================================
 // INICIALIZACIÓN DE CONTROLES DE SIMULACIÓN
@@ -6526,12 +6795,18 @@ function initializeAlertConfiguration(){
 
     if(errorInput){
 
-        errorInput.addEventListener("change", () => {
+    errorInput.addEventListener("change", () => {
 
-            const value =
-                Number(errorInput.value);
+        const value =
+            Number(errorInput.value);
 
-            if(!Number.isNaN(value)){
+        if(!Number.isNaN(value)){
+
+            thresholds.system.errorRate =
+                Math.max(
+                    0,
+                    value / 100
+                );
 
             thresholds.recovery.errorRate =
                 Math.max(
@@ -6539,9 +6814,9 @@ function initializeAlertConfiguration(){
                     thresholds.system.errorRate - 0.20
                 );
 
-            }
+        }
 
-        });
+    });
 
     }
 
