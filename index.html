@@ -617,8 +617,507 @@ LOWER
        </div>
 
    </div>
+   
+    <!-- =================================================
+        PANEL DE INTERVENCIÓN OPERATIVA
+    ================================================== -->
+
+    <div class="mt-6 border-t border-[#2f3445] pt-5">
+
+        <!-- HEADER -->
+
+        <div class="flex justify-between items-start mb-4">
+
+            <div>
+
+                <h3 class="text-lg font-semibold">
+                    🛠️ Intervención operativa
+                </h3>
+
+                <p class="text-xs text-gray-500 mt-1">
+                    Acciones disponibles ante una incidencia
+                </p>
+
+            </div>
+
+            <span
+                id="operationalSituation"
+                class="text-xs font-semibold text-green-400">
+
+                OPERATIVO
+
+            </span>
+
+        </div>
+
+
+        <!-- SITUACIÓN -->
+
+        <div
+            id="operationalMessage"
+            class="mb-4 p-3 rounded-lg
+                bg-[#252b3d]
+                border border-[#394056]
+                text-sm">
+
+            El sistema funciona con normalidad.
+            No es necesaria ninguna intervención.
+
+        </div>
+
+
+        <!-- ACCIONES -->
+
+        <div>
+
+            <div
+                class="text-xs uppercase tracking-wider
+                    text-gray-500 mb-3">
+
+                Acciones disponibles
+
+            </div>
+
+
+            <div
+                id="operationalActions"
+                class="space-y-2">
+
+
+                <!-- =================================================
+                ACCIONES HIGH LOAD
+           ================================================== -->
+           
+           <div id="highLoadActions">
+           
+               <!-- REDISTRIBUIR CARGA -->
+           
+               <button
+                   type="button"
+                   class="operational-action w-full text-left
+                          p-3 rounded-lg
+                          bg-[#252b3d]
+                          border border-[#394056]
+                          hover:bg-[#30374d]
+                          transition"
+                   data-action="redistribute">
+           
+                   <div class="flex justify-between items-center">
+           
+                       <div>
+           
+                           <div class="font-medium text-sm">
+                               Redistribuir carga
+                           </div>
+           
+                           <div class="text-xs text-gray-500 mt-1">
+                               Reduce la presión sobre los servicios más exigidos.
+                           </div>
+           
+                       </div>
+           
+                       <span class="text-xs text-gray-400">
+                           €€
+                       </span>
+           
+                   </div>
+           
+               </button>
+           
+           
+               <!-- LIMITAR SOLICITUDES -->
+           
+               <button
+                   type="button"
+                   class="operational-action w-full text-left
+                          p-3 rounded-lg
+                          bg-[#252b3d]
+                          border border-[#394056]
+                          hover:bg-[#30374d]
+                          transition"
+                   data-action="limit-users">
+           
+                   <div class="flex justify-between items-center">
+           
+                       <div>
+           
+                           <div class="font-medium text-sm">
+                               Limitar solicitudes
+                           </div>
+           
+                           <div class="text-xs text-gray-500 mt-1">
+                               Reduce la carga sacrificando parte de la capacidad de atención.
+                           </div>
+           
+                       </div>
+           
+                       <span class="text-xs text-gray-400">
+                           €
+                       </span>
+           
+                   </div>
+           
+               </button>
+           
+           
+               <!-- REDUCIR PROCESOS -->
+           
+               <button
+                   type="button"
+                   class="operational-action w-full text-left
+                          p-3 rounded-lg
+                          bg-[#252b3d]
+                          border border-[#394056]
+                          hover:bg-[#30374d]
+                          transition"
+                   data-action="reduce-load">
+           
+                   <div class="flex justify-between items-center">
+           
+                       <div>
+           
+                           <div class="font-medium text-sm">
+                               Reducir procesos no prioritarios
+                           </div>
+           
+                           <div class="text-xs text-gray-500 mt-1">
+                               Libera recursos para mantener los servicios esenciales.
+                           </div>
+           
+                       </div>
+           
+                       <span class="text-xs text-gray-400">
+                           €
+                       </span>
+           
+                   </div>
+           
+               </button>
+           
+           
+               <!-- REINICIAR -->
+           
+               <button
+                   type="button"
+                   class="operational-action w-full text-left
+                          p-3 rounded-lg
+                          bg-[#252b3d]
+                          border border-[#394056]
+                          hover:bg-[#30374d]
+                          transition"
+                   data-action="restart-service">
+           
+                   <div class="flex justify-between items-center">
+           
+                       <div>
+           
+                           <div class="font-medium text-sm">
+                               Reiniciar servicio afectado
+                           </div>
+           
+                           <div class="text-xs text-gray-500 mt-1">
+                               Intenta recuperar un servicio que presenta problemas.
+                           </div>
+           
+                       </div>
+           
+                       <span class="text-xs text-gray-400">
+                           €€
+                       </span>
+           
+                   </div>
+           
+               </button>
+           
+           
+               <!-- PROTEGER SERVICIOS -->
+           
+               <button
+                   type="button"
+                   class="operational-action w-full text-left
+                          p-3 rounded-lg
+                          bg-[#252b3d]
+                          border border-[#394056]
+                          hover:bg-[#30374d]
+                          transition"
+                   data-action="protect-services">
+           
+                   <div class="flex justify-between items-center">
+           
+                       <div>
+           
+                           <div class="font-medium text-sm">
+                               Priorizar servicios esenciales
+                           </div>
+           
+                           <div class="text-xs text-gray-500 mt-1">
+                               Protege los servicios críticos frente a la sobrecarga.
+                           </div>
+           
+                       </div>
+           
+                       <span class="text-xs text-gray-400">
+                           €€€
+                       </span>
+           
+                   </div>
+           
+               </button>
+           
+           
+               <!-- NO INTERVENIR -->
+           
+               <button
+                   type="button"
+                   class="operational-action w-full text-left
+                          p-3 rounded-lg
+                          bg-[#252b3d]
+                          border border-[#394056]
+                          hover:bg-[#30374d]
+                          transition"
+                   data-action="no-action">
+           
+                   <div class="flex justify-between items-center">
+           
+                       <div>
+           
+                           <div class="font-medium text-sm">
+                               No intervenir
+                           </div>
+           
+                           <div class="text-xs text-gray-500 mt-1">
+                               Mantener la situación actual y observar su evolución.
+                           </div>
+           
+                       </div>
+           
+                       <span class="text-xs text-gray-400">
+                           €0
+                       </span>
+           
+                   </div>
+           
+               </button>
+           
+           </div>
+           
+           
+           <!-- =================================================
+                ACCIONES INCIDENT
+           ================================================== -->
+           
+           <div id="incidentActions" class="hidden">
+           
+               <!-- RECUPERAR SERVICIO -->
+           
+               <button
+                   type="button"
+                   class="operational-action w-full text-left
+                          p-3 rounded-lg
+                          bg-[#252b3d]
+                          border border-[#394056]
+                          hover:bg-[#30374d]
+                          transition"
+                   data-action="incident-recover">
+           
+                   <div class="flex justify-between items-center">
+           
+                       <div>
+           
+                           <div class="font-medium text-sm">
+                               Recuperar servicio afectado
+                           </div>
+           
+                           <div class="text-xs text-gray-500 mt-1">
+                               Inicia la recuperación del componente afectado por el incidente.
+                           </div>
+           
+                       </div>
+           
+                       <span class="text-xs text-gray-400">
+                           €€
+                       </span>
+           
+                   </div>
+           
+               </button>
+           
+           
+               <!-- AISLAR DEPENDENCIA -->
+           
+               <button
+                   type="button"
+                   class="operational-action w-full text-left
+                          p-3 rounded-lg
+                          bg-[#252b3d]
+                          border border-[#394056]
+                          hover:bg-[#30374d]
+                          transition"
+                   data-action="incident-isolate">
+           
+                   <div class="flex justify-between items-center">
+           
+                       <div>
+           
+                           <div class="font-medium text-sm">
+                               Aislar dependencia crítica
+                           </div>
+           
+                           <div class="text-xs text-gray-500 mt-1">
+                               Evita que el fallo continúe propagándose por la arquitectura.
+                           </div>
+           
+                       </div>
+           
+                       <span class="text-xs text-gray-400">
+                           €€
+                           </span>
+           
+                   </div>
+           
+               </button>
+           
+           
+               <!-- OPERACIÓN PARCIAL -->
+           
+               <button
+                   type="button"
+                   class="operational-action w-full text-left
+                          p-3 rounded-lg
+                          bg-[#252b3d]
+                          border border-[#394056]
+                          hover:bg-[#30374d]
+                          transition"
+                   data-action="incident-partial">
+           
+                   <div class="flex justify-between items-center">
+           
+                       <div>
+           
+                           <div class="font-medium text-sm">
+                               Mantener operación parcial
+                           </div>
+           
+                           <div class="text-xs text-gray-500 mt-1">
+                               Mantiene disponibles los servicios que todavía funcionan.
+                           </div>
+           
+                       </div>
+           
+                       <span class="text-xs text-gray-400">
+                           €€
+                       </span>
+           
+                   </div>
+           
+               </button>
+           
+           
+               <!-- NO INTERVENIR -->
+           
+               <button
+                   type="button"
+                   class="operational-action w-full text-left
+                          p-3 rounded-lg
+                          bg-[#252b3d]
+                          border border-[#394056]
+                          hover:bg-[#30374d]
+                          transition"
+                   data-action="incident-no-action">
+           
+                   <div class="flex justify-between items-center">
+           
+                       <div>
+           
+                           <div class="font-medium text-sm">
+                               No intervenir
+                           </div>
+           
+                           <div class="text-xs text-gray-500 mt-1">
+                               Observar la evolución del incidente sin aplicar medidas.
+                           </div>
+           
+                       </div>
+           
+                       <span class="text-xs text-gray-400">
+                           €0
+                       </span>
+           
+                   </div>
+           
+               </button>
+           
+           </div>
+
+
+            </div>
+
+        </div>
+
+
+        <!-- IMPACTO -->
+
+        <div class="mt-5 pt-4 border-t border-[#2f3445]">
+
+            <div
+                class="text-xs uppercase tracking-wider
+                    text-gray-500 mb-3">
+
+                Impacto de la intervención
+
+            </div>
+
+
+            <div class="grid grid-cols-2 gap-4">
+
+
+                <!-- COSTE -->
+
+                <div>
+
+                    <div class="text-xs text-gray-500">
+                        Coste estimado
+                    </div>
+
+                    <div
+                        id="operationalCost"
+                        class="text-lg font-semibold mt-1">
+
+                        €0
+
+                    </div>
+
+                </div>
+
+
+                <!-- USUARIOS -->
+
+                <div>
+
+                    <div class="text-xs text-gray-500">
+                        Usuarios afectados
+                    </div>
+
+                    <div
+                        id="operationalUsersImpact"
+                        class="text-lg font-semibold mt-1">
+
+                        0
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
+
+
 
 
 <!-- =================================================

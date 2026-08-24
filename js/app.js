@@ -798,6 +798,8 @@ const simulation = {
 
     targetUsers: 500,
 
+    baseTargetUsers: 500,
+
     currentUsers: 500,
 
     engineState: "Running",
@@ -815,9 +817,30 @@ const simulation = {
 
     latencyOffset: 0,
 
-    errorOffset: 0
+    errorOffset: 0,
+
+    // ==============================================
+    // INTERVENCIÓN OPERATIVA
+    // ==============================================
+    
+    intervention: {
+
+        cpuRelief: 0,
+        latencyRelief: 0,
+        userImpact: 0,
+        currentAction: null,
+        restartTarget: null,
+        incidentTarget: null,
+        recoveredServices: []
+    
+    },
+    
+    previousCpu: system.cpu,
+    previousLatency: system.latency    
 
 };
+
+
 
 // ======================================================
 // SCENARIOS
@@ -985,6 +1008,29 @@ function simulateSystem(){
         (scenario.errorOffset - simulation.errorOffset) *
         errorTransitionSpeed;
 
+
+// ==============================================
+// IMPACTO DE LA INTERVENCIÓN SOBRE LOS USUARIOS
+// ==============================================
+
+if(
+    simulation.intervention.currentAction === "limit-users"
+){
+
+    simulation.targetUsers =
+        Math.max(
+            scenarios[currentSimulationMode].users.min,
+            simulation.baseTargetUsers -
+            simulation.intervention.userImpact
+        );
+
+}else{
+
+    simulation.targetUsers =
+        simulation.baseTargetUsers;
+
+}
+
     // 1. Evolución progresiva de usuarios hacia el objetivo del escenario
 const difference = simulation.targetUsers - system.users;
 
@@ -1018,29 +1064,32 @@ system.users = Math.max(
 
     // 3. CPU (Fórmula base + anomalías por escenario)
     system.cpu =
-    12 +
-    (system.throughput / 40) +
-    (Math.random() * 4 - 2) +
-    simulation.cpuOffset;
+        12 +
+        (system.throughput / 40) +
+        (Math.random() * 4 - 2) +
+        simulation.cpuOffset -
+        simulation.intervention.cpuRelief;
+
     
     system.cpu = Math.min(100, Math.max(0, system.cpu)); // Protegemos límites entre 0 y 100
 
     // 4. Memoria (Depende de usuarios y CPU)
-system.memory =
-    35 +
-    (system.users / 45) +
-    (system.cpu * 0.35) +
-    (Math.random() * 3 - 1.5);
+    system.memory =
+        35 +
+        (system.users / 45) +
+        (system.cpu * 0.35) +
+        (Math.random() * 3 - 1.5);
 
 // Limitamos el valor
-system.memory = Math.min(95, Math.max(20, system.memory));
+    system.memory = Math.min(95, Math.max(20, system.memory));
 
     // 5. Latencia (Fórmula base + penalización crítica por incidente)
-system.latency =
-    70 +
-    (system.cpu * 1.25) +
-    (Math.random() * 10) +
-    simulation.latencyOffset;
+    system.latency =
+        70 +
+        (system.cpu * 1.25) +
+        (Math.random() * 10) +
+        simulation.latencyOffset -
+        simulation.intervention.latencyRelief;
 
     // 6. Error Rate (Comienza a crecer solo con alta saturación)
 system.errorRate =
@@ -1059,48 +1108,185 @@ function updateServiceHealth(service){
 
     let delta = 0;
 
-    // Penalización por CPU
-    if(service.cpu >= thresholds.services.critical.cpu){
 
-        delta -= 6;
+    // ==================================================
+    // SERVICIO YA RECUPERADO POR INTERVENCIÓN
+    // ==================================================
 
-    }else if(service.cpu >= thresholds.services.warning.cpu){
+    const isRecoveredByIntervention =
+        simulation.intervention.recoveredServices &&
+        simulation.intervention.recoveredServices.includes(service);
 
-        delta -= 2;
+
+    // ==================================================
+    // SERVICIO ESTABILIZADO
+    // ==================================================
+
+    if(isRecoveredByIntervention){
+
+        // El servicio ya ha sido recuperado.
+        // No lo penalizamos mientras otra intervención
+        // de reinicio está en curso.
+
+        delta = 0;
+
+    }else{
+
+        // ==================================================
+        // PENALIZACIÓN POR CPU
+        // ==================================================
+
+        if(service.cpu >= thresholds.services.critical.cpu){
+
+            delta -= 6;
+
+        }else if(service.cpu >= thresholds.services.warning.cpu){
+
+            delta -= 2;
+
+        }
+
+
+        // ==================================================
+        // PENALIZACIÓN POR LATENCIA
+        // ==================================================
+
+        if(service.latency >= thresholds.services.critical.latency){
+
+            delta -= 6;
+
+        }else if(service.latency >= thresholds.services.warning.latency){
+
+            delta -= 2;
+
+        }
+
+
+        // ==================================================
+        // PENALIZACIÓN POR DEPENDENCIAS
+        // ==================================================
+
+        service.dependsOn.forEach(dep => {
+
+            const parent = services[dep];
+
+            if(parent){
+
+                delta -=
+                    (100 - parent.healthScore) * 0.05;
+
+            }
+
+        });
+
+
+        // ==================================================
+        // RECUPERACIÓN NATURAL
+        // ==================================================
+
+        if(delta === 0){
+
+            delta = 3;
+
+        }
 
     }
 
-    // Penalización por latencia
-    if(service.latency >= thresholds.services.critical.latency){
 
-        delta -= 6;
+    // ==================================================
+    // REINICIO DE SERVICIO
+    // ==================================================
 
-    }else if(service.latency >= thresholds.services.warning.latency){
+    if(
+        simulation.intervention.currentAction === "restart-service" &&
+        simulation.intervention.restartTarget
+    ){
 
-        delta -= 2;
+        const target =
+            services[
+                simulation.intervention.restartTarget
+            ];
+
+        if(target === service){
+
+            // El servicio seleccionado recibe
+            // una recuperación acelerada.
+
+            delta += 12;
+
+        }
 
     }
 
-    // Penalización por dependencias
-    service.dependsOn.forEach(dep => {
-
-        const parent = services[dep];
-
-        delta -= (100 - parent.healthScore) * 0.05;
-
-    });
-
-    // Recuperación natural
-    if(delta === 0){
-
-        delta = 3;
-
+    // ==================================================
+    // RECUPERACIÓN DE INCIDENTE
+    // ==================================================
+    
+    if(
+        simulation.intervention.currentAction === "incident-recover" &&
+        simulation.intervention.incidentTarget
+    ){
+    
+        const target =
+            services[
+                simulation.intervention.incidentTarget
+            ];
+    
+        if(target === service){
+    
+            // Durante la recuperación de un incidente,
+            // la acción del operador domina las
+            // penalizaciones normales del servicio.
+    
+            delta = 10;
+    
+        }
+    
     }
+
+    // ==================================================
+    // ACTUALIZAR HEALTH SCORE
+    // ==================================================
 
     service.healthScore += delta;
 
     service.healthScore =
-        Math.max(0, Math.min(100, service.healthScore));
+        Math.max(
+            0,
+            Math.min(100, service.healthScore)
+        );
+
+
+    // ==================================================
+    // REGISTRAR SERVICIO RECUPERADO
+    // ==================================================
+
+    if(
+        simulation.intervention.currentAction === "restart-service" &&
+        simulation.intervention.restartTarget
+    ){
+
+        const target =
+            services[
+                simulation.intervention.restartTarget
+            ];
+
+        if(
+            target === service &&
+            service.healthScore >= 100 &&
+            !simulation.intervention.recoveredServices.includes(service)
+        ){
+
+            simulation.intervention.recoveredServices.push(service);
+
+            console.log(
+                "Servicio recuperado y estabilizado:",
+                service.name
+            );
+
+        }
+
+    }
 
 }
 
@@ -1249,6 +1435,27 @@ function simulateBaseServices(){
         // Variación natural
 service.cpu += Math.random() * 4 - 2;
 service.latency += Math.random() * 8 - 4;
+
+
+// --------------------------------------------------
+// EFECTO DE LA INTERVENCIÓN OPERATIVA
+// --------------------------------------------------
+
+// Las intervenciones globales afectan a todos los servicios.
+// restart-service es una intervención específica sobre
+// un único servicio y se gestiona en updateServiceHealth().
+
+if(
+    simulation.intervention.currentAction !== "restart-service"
+){
+
+    service.cpu -=
+        simulation.intervention.cpuRelief * 0.5;
+
+    service.latency -=
+        simulation.intervention.latencyRelief * 0.5;
+
+}
 
 // --------------------------------------------------
 // Memoria (depende principalmente de la CPU)
@@ -3078,7 +3285,7 @@ function renderOperationalAssessment(){
         else{
 
             details =
-                `${conditions.slice(0, -1).join(", ")} and ${conditions.at(-1)}.`;
+                `${conditions.slice(0, -1).join(", ")} Y ${conditions.at(-1)}.`;
 
         }
 
@@ -5404,6 +5611,475 @@ function evaluateSystemState(){
 }
 
 // ======================================================
+// EFECTOS DE LAS INTERVENCIONES OPERATIVAS
+// ======================================================
+
+function updateInterventionEffects(){
+
+    const action =
+        simulation.intervention.currentAction;
+
+    // Sin intervención
+    if(!action){
+
+        simulation.intervention.cpuRelief = 0;
+        simulation.intervention.latencyRelief = 0;
+        simulation.intervention.userImpact = 0;
+
+        return;
+
+    }
+
+
+    // Valores base de la intervención
+    let cpuRelief = 0;
+    let latencyRelief = 0;
+    let userImpact = 0;
+
+
+    switch(action){
+
+        case "redistribute":
+
+            cpuRelief = 8;
+            latencyRelief = 10;
+
+        break;
+
+
+        case "limit-users":
+
+        cpuRelief = 14;
+        latencyRelief = 15;
+        userImpact = 80;
+    
+        break;
+
+
+        case "reduce-load":
+
+            cpuRelief = 10;
+            latencyRelief = 8;
+
+        break;
+
+
+        case "restart-service":
+
+            latencyRelief = 18;
+            userImpact = 25;
+        
+            // Seleccionar un único servicio afectado
+            if(!simulation.intervention.restartTarget){
+        
+                const affectedService =
+                    Object.entries(services)
+                        .find(([key, service]) =>
+                            service.status === "DOWN"
+                        );
+        
+                if(affectedService){
+        
+                    simulation.intervention.restartTarget =
+                        affectedService[0];
+        
+                }
+        
+            }
+        
+        break;
+
+
+        case "protect-services":
+
+            cpuRelief = 12;
+            latencyRelief = 12;
+            userImpact = 40;
+
+        break;
+
+
+        case "no-action":
+
+            userImpact = 0;
+
+        break;
+
+    }
+
+
+    simulation.intervention.cpuRelief =
+        cpuRelief;
+
+    simulation.intervention.latencyRelief =
+        latencyRelief;
+
+    simulation.intervention.userImpact =
+        userImpact;
+
+}
+
+// ======================================================
+// RENDERIZADO DE INTERVENCIÓN OPERATIVA
+// ======================================================
+
+function renderOperationalIntervention(){
+
+    const situation =
+        document.getElementById("operationalSituation");
+
+    const message =
+        document.getElementById("operationalMessage");
+
+    const cost =
+        document.getElementById("operationalCost");
+
+    const usersImpact =
+        document.getElementById("operationalUsersImpact");
+
+    const action =
+        simulation.intervention.currentAction;
+
+
+    // ==================================================
+    // SIN INTERVENCIÓN
+    // ==================================================
+
+    if(!action){
+
+        if(situation){
+
+            situation.textContent = "OPERATIVO";
+
+            situation.className =
+                "text-xs font-semibold text-green-400";
+
+        }
+
+        if(message){
+
+            message.textContent =
+                "El sistema funciona con normalidad. No es necesaria ninguna intervención.";
+
+        }
+
+        if(cost){
+
+            cost.textContent = "€0";
+
+        }
+
+        if(usersImpact){
+
+            usersImpact.textContent = "0";
+
+        }
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // CALCULAR ESTADO DE LA INTERVENCIÓN
+    // ==================================================
+    
+    const cpu =
+        system.cpu;
+    
+    const latency =
+        system.latency;
+    
+    
+    // ==================================================
+    // ESTADO DE LOS SERVICIOS
+    // ==================================================
+    
+    const healthyServices =
+        Object.values(services)
+            .filter(service =>
+                service.status === "HEALTHY"
+            ).length;
+    
+    const totalServices =
+        Object.keys(services).length;
+    
+    
+    // ==================================================
+    // EVOLUCIÓN DE LAS MÉTRICAS
+    // ==================================================
+    
+    const cpuImproving =
+        system.cpu < simulation.previousCpu;
+    
+    const latencyImproving =
+        system.latency < simulation.previousLatency;
+    
+    
+    // ==================================================
+    // ESTADO INICIAL
+    // ==================================================
+    
+    let level = "WARNING";
+    let icon = "🟡";
+    let title = "Intervención en curso";
+    
+    
+    // ==================================================
+    // 🟢 INTERVENCIÓN EFECTIVA
+    // ==================================================
+    
+    if(
+        healthyServices === totalServices &&
+        totalServices > 0
+    ){
+    
+        level = "HEALTHY";
+        icon = "🟢";
+        title = "Intervención efectiva";
+    
+    }
+    
+    
+    // ==================================================
+    // 🟡 INTERVENCIÓN EN CURSO
+    // ==================================================
+    
+    else if(
+        cpuImproving ||
+        latencyImproving ||
+        healthyServices > 0
+    ){
+    
+        level = "WARNING";
+        icon = "🟡";
+        title = "Intervención en curso";
+    
+    }
+    
+    
+    // ==================================================
+    // 🔴 INTERVENCIÓN INSUFICIENTE
+    // ==================================================
+    
+    else{
+    
+        level = "CRITICAL";
+        icon = "🔴";
+        title = "Intervención insuficiente";
+    
+    }
+
+    // ==================================================
+    // DESCRIPCIÓN DE LA DECISIÓN
+    // ==================================================
+
+    switch(action){
+
+        case "redistribute":
+
+            description =
+                "La redistribución de carga está reduciendo la presión sobre los servicios más exigidos.";
+
+        break;
+
+
+        case "limit-users":
+
+            description =
+                "La limitación de solicitudes reduce la presión del sistema, pero afecta temporalmente a parte de los usuarios.";
+
+        break;
+
+
+        case "reduce-load":
+
+            description =
+                "La reducción de procesos no prioritarios libera recursos para mantener los servicios esenciales.";
+
+        break;
+
+
+        case "restart-service":
+
+            description =
+                "El reinicio intenta recuperar el servicio afectado, aunque puede provocar una interrupción temporal.";
+
+        break;
+
+
+        case "protect-services":
+
+            description =
+                "La prioridad se centra en mantener disponibles los servicios esenciales, sacrificando parte de la capacidad.";
+
+        break;
+
+
+        case "no-action":
+
+            description =
+                "No se ha aplicado ninguna medida. La evolución del incidente depende del comportamiento natural del sistema.";
+
+        break;
+
+
+        default:
+
+            description =
+                "La intervención seleccionada está siendo aplicada.";
+
+    }
+
+
+    // ==================================================
+    // SITUACIÓN
+    // ==================================================
+
+    if(situation){
+
+        situation.textContent =
+            `${icon} ${title}`;
+
+        let color =
+            "text-yellow-400";
+
+        if(level === "HEALTHY"){
+
+            color = "text-green-400";
+
+        }else if(level === "CRITICAL"){
+
+            color = "text-red-400";
+
+        }
+
+        situation.className =
+            `text-xs font-semibold ${color}`;
+
+    }
+
+
+    // ==================================================
+    // MENSAJE
+    // ==================================================
+
+    if(message){
+
+        message.textContent =
+            description;
+
+    }
+
+
+    // ==================================================
+    // IMPACTO ECONÓMICO SIMBÓLICO
+    // ==================================================
+
+    let costLevel = "€";
+
+    if(action === "redistribute"){
+
+        costLevel = "€€";
+
+    }else if(action === "restart-service"){
+
+        costLevel = "€€";
+
+    }else if(action === "protect-services"){
+
+        costLevel = "€€€";
+
+    }
+
+
+    if(cost){
+
+        cost.textContent =
+            costLevel;
+
+    }
+
+
+    // ==================================================
+    // USUARIOS AFECTADOS
+    // ==================================================
+
+    if(usersImpact){
+
+        usersImpact.textContent =
+            simulation.intervention.userImpact > 0
+                ? simulation.intervention.userImpact
+                : "0";
+
+    }
+
+}
+
+// ======================================================
+// RENDERIZADO DEL IMPACTO DE LA INTERVENCIÓN
+// ======================================================
+
+function renderInterventionImpact(){
+
+    const action =
+        simulation.intervention.currentAction;
+
+    const costElement =
+        document.getElementById("operationalCost");
+
+    const usersElement =
+        document.getElementById("operationalUsersImpact");
+
+
+    if(!costElement || !usersElement){
+        return;
+    }
+
+
+    // Sin intervención
+
+    if(!action){
+
+        costElement.textContent = "€0";
+        usersElement.textContent = "0";
+
+        return;
+
+    }
+
+
+    // Coste simbólico de cada intervención
+
+    const interventionCosts = {
+
+        "redistribute": "€€",
+
+        "limit-users": "€",
+
+        "reduce-load": "€",
+
+        "restart-service": "€€",
+
+        "protect-services": "€€€",
+
+        "no-action": "€"
+
+    };
+
+
+    costElement.textContent =
+        interventionCosts[action] || "€";
+
+
+    usersElement.textContent =
+        simulation.intervention.userImpact;
+
+}
+
+
+
+// ======================================================
 // APM VIEW
 // ======================================================
 
@@ -6507,9 +7183,14 @@ function tick(){
     // SIMULACIÓN
     // ==============================================
 
+    simulation.previousCpu = system.cpu;
+    simulation.previousLatency = system.latency;
+    
     simulateSystem();
 
     simulateServices();
+
+    updateInterventionEffects();    
 
 
     // ==============================================
@@ -6548,6 +7229,10 @@ function tick(){
     renderSystemStatus();
 
     renderOperationalAssessment();
+
+    renderOperationalIntervention();
+
+    renderInterventionImpact();
 
 
     // ==============================================
@@ -6624,12 +7309,33 @@ document.getElementById('scenarioSelect').addEventListener('change', (event) => 
 
     simulation.currentScenario = selectedScenario;
 
+    // ==================================================
+    // REINICIAR INTERVENCIÓN AL CAMBIAR DE ESCENARIO
+    // ==================================================
+
+    simulation.intervention.currentAction = null;
+
+    simulation.intervention.cpuRelief = 0;
+
+    simulation.intervention.latencyRelief = 0;
+
+    simulation.intervention.userImpact = 0;
+
+    simulation.intervention.restartTarget = null;
+
+    simulation.intervention.recoveredServices = [];
+
+    // ==================================================
+
     const scenario = scenarios[selectedScenario];
 
-    simulation.targetUsers =
+    simulation.baseTargetUsers =
         Math.round(
             (scenario.users.min + scenario.users.max) / 2
         );
+
+    simulation.targetUsers =
+        simulation.baseTargetUsers;
 
     console.log(
         `Situación: ${selectedScenario} | Target: ${simulation.targetUsers}`
@@ -6676,6 +7382,271 @@ if(resetButton){
 // ======================================================
 
 initializeSimulationControls();
+
+// ======================================================
+// INTERVENCIONES OPERATIVAS
+// ======================================================
+
+function initializeOperationalInterventions(){
+
+    const actions =
+        document.querySelectorAll(
+            ".operational-action"
+        );
+    
+    // ==================================================
+    // PANELES DE INTERVENCIÓN
+    // ==================================================
+
+    const scenarioSelect =
+        document.getElementById(
+            "scenarioSelect"
+        );
+
+    const highLoadActions =
+        document.getElementById(
+            "highLoadActions"
+        );
+
+    const incidentActions =
+        document.getElementById(
+            "incidentActions"
+        );
+
+
+    // ==================================================
+    // ACTUALIZAR ACCIONES SEGÚN ESCENARIO
+    // ==================================================
+
+    function updateOperationalActions(){
+
+        const scenario =
+            scenarioSelect
+                ? scenarioSelect.value
+                : "NORMAL";
+
+
+        // ----------------------------------------------
+        // OCULTAR AMBOS PANELES
+        // ----------------------------------------------
+
+        if(highLoadActions){
+
+            highLoadActions.classList.add(
+                "hidden"
+            );
+
+        }
+
+        if(incidentActions){
+
+            incidentActions.classList.add(
+                "hidden"
+            );
+
+        }
+
+
+        // ----------------------------------------------
+        // HIGH LOAD
+        // ----------------------------------------------
+
+        if(
+            scenario === "HIGH_LOAD" &&
+            highLoadActions
+        ){
+
+            highLoadActions.classList.remove(
+                "hidden"
+            );
+
+        }
+
+
+        // ----------------------------------------------
+        // INCIDENT
+        // ----------------------------------------------
+
+        if(
+            scenario === "INCIDENT" &&
+            incidentActions
+        ){
+
+            incidentActions.classList.remove(
+                "hidden"
+            );
+
+        }
+
+    }
+
+
+    // ==================================================
+    // CAMBIO DE ESCENARIO
+    // ==================================================
+
+    if(scenarioSelect){
+
+        scenarioSelect.addEventListener(
+            "change",
+            updateOperationalActions
+        );
+
+    }
+
+
+    // ==================================================
+    // ESTADO INICIAL
+    // ==================================================
+
+    updateOperationalActions();
+
+    actions.forEach(button => {
+
+        button.addEventListener("click", () => {
+
+            const action =
+                button.dataset.action;
+
+            // ==================================================
+            // RECUPERACIÓN DE INCIDENTE
+            // ==================================================
+            
+            if(action === "incident-recover"){
+            
+                simulation.intervention.currentAction =
+                    action;
+            
+                // La Base de Datos es el origen
+                // del incidente definido en este escenario
+                simulation.intervention.incidentTarget =
+                    "database";
+            
+                console.log(
+                    "Recuperación de incidente iniciada:",
+                    services.database.name
+                );
+            
+                return;
+            
+            }            
+
+            // ==================================================
+            // REINICIAR SERVICIO AFECTADO
+            // ==================================================
+
+            if(action === "restart-service"){
+
+                const currentTarget =
+                    simulation.intervention.restartTarget;
+
+
+                // --------------------------------------------------
+                // Si ya existe un objetivo y todavía está DOWN,
+                // no iniciamos otro reinicio.
+                // --------------------------------------------------
+
+                if(currentTarget){
+
+                    const currentService =
+                        services[currentTarget];
+
+                    if(
+                        currentService &&
+                        currentService.status === "DOWN"
+                    ){
+
+                        console.log(
+                            "El servicio seleccionado todavía se está recuperando:",
+                            currentService.name
+                        );
+
+                        simulation.intervention.currentAction =
+                            action;
+
+                        return;
+
+                    }
+
+                }
+
+
+                // --------------------------------------------------
+                // El objetivo anterior ya está recuperado.
+                // Buscamos el siguiente servicio DOWN.
+                // --------------------------------------------------
+
+                const affectedService =
+                    Object.entries(services)
+                        .find(([key, service]) =>
+                            service.status === "DOWN"
+                        );
+
+
+                // --------------------------------------------------
+                // No quedan servicios afectados
+                // --------------------------------------------------
+
+                if(!affectedService){
+
+                    simulation.intervention.currentAction =
+                        null;
+
+                    simulation.intervention.restartTarget =
+                        null;
+
+                    console.log(
+                        "No hay servicios afectados que reiniciar."
+                    );
+
+                    return;
+
+                }
+
+
+                // --------------------------------------------------
+                // Nuevo objetivo
+                // --------------------------------------------------
+
+                simulation.intervention.restartTarget =
+                    affectedService[0];
+
+                simulation.intervention.currentAction =
+                    action;
+
+                console.log(
+                    "Reinicio iniciado:",
+                    affectedService[1].name
+                );
+
+                return;
+
+            }
+
+
+            // ==================================================
+            // RESTO DE INTERVENCIONES
+            // ==================================================
+
+            simulation.intervention.currentAction =
+                action;
+
+            console.log(
+                "Intervención seleccionada:",
+                action
+            );
+
+        });
+
+    });
+
+}
+
+// ======================================================
+// INICIALIZACIÓN DE INTERVENCIONES OPERATIVAS
+// ======================================================
+
+initializeOperationalInterventions();
 
 // ======================================================
 // INICIALIZACIÓN DE ALERT CONFIGURATION
