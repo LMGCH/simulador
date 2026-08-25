@@ -828,6 +828,9 @@ const simulation = {
         cpuRelief: 0,
         latencyRelief: 0,
         userImpact: 0,
+
+        incidentAffectedUsers: 0,
+
         currentAction: null,
         restartTarget: null,
         incidentTarget: null,
@@ -1108,6 +1111,9 @@ function updateServiceHealth(service){
 
     let delta = 0;
 
+    const isolatedByIncident =
+        simulation.intervention.currentAction ===
+        "incident-isolate";
 
     // ==================================================
     // SERVICIO YA RECUPERADO POR INTERVENCIÓN
@@ -1161,23 +1167,29 @@ function updateServiceHealth(service){
 
         }
 
-
         // ==================================================
-        // PENALIZACIÓN POR DEPENDENCIAS
+        // ESTABILIZACIÓN POR AISLAMIENTO
         // ==================================================
-
-        service.dependsOn.forEach(dep => {
-
-            const parent = services[dep];
-
-            if(parent){
-
-                delta -=
-                    (100 - parent.healthScore) * 0.05;
-
+        
+        if(isolatedByIncident){
+        
+            const hasDependency =
+                service.dependsOn.length > 0;
+        
+            if(hasDependency){
+        
+                // Mientras el aislamiento esté activo,
+                // el servicio queda protegido de la degradación
+                // provocada por la cadena del incidente.
+                //
+                // La recuperación es gradual y no depende de
+                // que la dependencia siga caída.
+        
+                delta += 5;
+        
             }
-
-        });
+        
+        }
 
 
         // ==================================================
@@ -1242,6 +1254,71 @@ function updateServiceHealth(service){
     
         }
     
+    }
+
+    // ==================================================
+    // RECUPERACIÓN DE DEPENDENCIAS DEL INCIDENTE
+    // ==================================================
+    
+    if(
+        simulation.intervention.currentAction === "incident-recover"
+    ){
+    
+        const healthyDependency =
+            service.dependsOn.some(dep => {
+    
+                const dependency =
+                    services[dep];
+    
+                return (
+                    dependency &&
+                    dependency.status === "HEALTHY"
+                );
+    
+            });
+    
+        if(healthyDependency){
+    
+            // Una dependencia inmediata ya está recuperada.
+            // El servicio puede iniciar su recuperación.
+    
+            delta += 5;
+    
+        }
+    
+    }
+
+    // ==================================================
+    // MANTENER OPERACIÓN PARCIAL
+    // ==================================================
+
+    if(
+        simulation.intervention.currentAction ===
+        "incident-partial"
+    ){
+
+        // --------------------------------------------------
+        // Servicios que todavía están operativos:
+        // no necesitan recuperación.
+        // --------------------------------------------------
+
+        if(service.healthScore >= 70){
+
+            delta = Math.max(delta, 0);
+
+        }
+
+        // --------------------------------------------------
+        // Servicios degradados o caídos:
+        // recuperación gradual.
+        // --------------------------------------------------
+
+        else{
+
+            delta = Math.max(delta, 4);
+
+        }
+
     }
 
     // ==================================================
@@ -1492,31 +1569,67 @@ service.requests =
 function propagateDependencies(){
 
     for(let iteration = 0; iteration < 2; iteration++){
-        
-    Object.values(services).forEach(service => {
 
-    service.dependsOn.forEach(dependency => {
+        Object.values(services).forEach(service => {
 
-        const parent = services[dependency];
+            service.dependsOn.forEach(dependency => {
 
-        if(parent.status !== "HEALTHY"){
+                const parent =
+                    services[dependency];
 
-            const cpuImpact =
-                (parent.cpu - 60) * 0.08;
+                if(!parent){
+                    return;
+                }
 
-            const latencyImpact =
-                (parent.latency - 100) * 0.06;
 
-            service.cpu += Math.max(0, cpuImpact);
-            service.latency += Math.max(0, latencyImpact);
+                // ==================================================
+                // DEPENDENCIA AFECTADA
+                // ==================================================
 
-        }
+                if(parent.status !== "HEALTHY"){
 
-    });
 
-});
+                    // ==================================================
+                    // AISLAMIENTO DE DEPENDENCIA CRÍTICA
+                    // ==================================================
 
-}
+                    if(
+                        simulation.intervention.currentAction ===
+                        "incident-isolate"
+                    ){
+
+                        // La dependencia afectada queda aislada.
+                        // Su degradación NO se propaga al servicio
+                        // dependiente.
+
+                        return;
+
+                    }
+
+
+                    // ==================================================
+                    // PROPAGACIÓN NORMAL
+                    // ==================================================
+
+                    const cpuImpact =
+                        (parent.cpu - 60) * 0.08;
+
+                    const latencyImpact =
+                        (parent.latency - 100) * 0.06;
+
+                    service.cpu +=
+                        Math.max(0, cpuImpact);
+
+                    service.latency +=
+                        Math.max(0, latencyImpact);
+
+                }
+
+            });
+
+        });
+
+    }
 
 }
 
@@ -5619,7 +5732,11 @@ function updateInterventionEffects(){
     const action =
         simulation.intervention.currentAction;
 
-    // Sin intervención
+
+    // ==================================================
+    // SIN INTERVENCIÓN SELECCIONADA
+    // ==================================================
+
     if(!action){
 
         simulation.intervention.cpuRelief = 0;
@@ -5631,11 +5748,18 @@ function updateInterventionEffects(){
     }
 
 
-    // Valores base de la intervención
+    // ==================================================
+    // VALORES BASE
+    // ==================================================
+
     let cpuRelief = 0;
     let latencyRelief = 0;
     let userImpact = 0;
 
+
+    // ==================================================
+    // HIGH LOAD
+    // ==================================================
 
     switch(action){
 
@@ -5649,10 +5773,10 @@ function updateInterventionEffects(){
 
         case "limit-users":
 
-        cpuRelief = 14;
-        latencyRelief = 15;
-        userImpact = 80;
-    
+            cpuRelief = 14;
+            latencyRelief = 15;
+            userImpact = 80;
+
         break;
 
 
@@ -5668,25 +5792,25 @@ function updateInterventionEffects(){
 
             latencyRelief = 18;
             userImpact = 25;
-        
+
             // Seleccionar un único servicio afectado
             if(!simulation.intervention.restartTarget){
-        
+
                 const affectedService =
                     Object.entries(services)
                         .find(([key, service]) =>
                             service.status === "DOWN"
                         );
-        
+
                 if(affectedService){
-        
+
                     simulation.intervention.restartTarget =
                         affectedService[0];
-        
+
                 }
-        
+
             }
-        
+
         break;
 
 
@@ -5705,8 +5829,66 @@ function updateInterventionEffects(){
 
         break;
 
+
+        // ==================================================
+        // INCIDENTE — RECUPERAR SERVICIO
+        // ==================================================
+
+        case "incident-recover":
+
+            latencyRelief = 8;
+
+            userImpact = 15;
+
+        break;
+
+
+        // ==================================================
+        // INCIDENTE — AISLAR DEPENDENCIA
+        // ==================================================
+
+        case "incident-isolate":
+
+            latencyRelief = 5;
+
+            userImpact = 30;
+
+        break;
+
+
+        // ==================================================
+        // INCIDENTE — MANTENER OPERACIÓN PARCIAL
+        // ==================================================
+
+        case "incident-partial":
+
+            cpuRelief = 4;
+            latencyRelief = 6;
+
+            userImpact = 60;
+
+        break;
+
+
+        // ==================================================
+        // INCIDENTE — NO INTERVENIR
+        // ==================================================
+
+        case "incident-no-action":
+
+            cpuRelief = 0;
+            latencyRelief = 0;
+
+            userImpact = 0;
+
+        break;
+
     }
 
+
+    // ==================================================
+    // APLICAR EFECTOS
+    // ==================================================
 
     simulation.intervention.cpuRelief =
         cpuRelief;
@@ -5716,6 +5898,99 @@ function updateInterventionEffects(){
 
     simulation.intervention.userImpact =
         userImpact;
+
+
+    // ==================================================
+    // IMPACTO ACUMULATIVO DEL INCIDENTE
+    // ==================================================
+
+    if(
+        currentSimulationMode === "INCIDENT"
+    ){
+
+        const affectedServices =
+            Object.values(services)
+                .filter(service =>
+                    service.status === "CRITICAL" ||
+                    service.status === "DOWN"
+                ).length;
+
+
+        // ----------------------------------------------
+        // INCIDENTE ACTIVO
+        // ----------------------------------------------
+
+        if(affectedServices > 0){
+
+            let incidentGrowth = 0;
+
+
+            // ------------------------------------------
+            // NO INTERVENIR
+            // ------------------------------------------
+
+            if(
+                action === "incident-no-action"
+            ){
+
+                incidentGrowth =
+                    affectedServices * 8;
+
+            }
+
+
+            // ------------------------------------------
+            // OPERACIÓN PARCIAL
+            // ------------------------------------------
+
+            else if(
+                action === "incident-partial"
+            ){
+
+                incidentGrowth =
+                    affectedServices * 4;
+
+            }
+
+
+            // ------------------------------------------
+            // AISLAMIENTO
+            // ------------------------------------------
+
+            else if(
+                action === "incident-isolate"
+            ){
+
+                incidentGrowth =
+                    affectedServices * 2;
+
+            }
+
+
+            // ------------------------------------------
+            // RECUPERACIÓN
+            // ------------------------------------------
+
+            else if(
+                action === "incident-recover"
+            ){
+
+                incidentGrowth =
+                    affectedServices * 1;
+
+            }
+
+
+            // ------------------------------------------
+            // ACUMULAR
+            // ------------------------------------------
+
+            simulation.intervention.incidentAffectedUsers +=
+                incidentGrowth;
+
+        }
+
+    }
 
 }
 
@@ -5742,36 +6017,109 @@ function renderOperationalIntervention(){
 
 
     // ==================================================
+    // ESTADO DE LOS SERVICIOS
+    // ==================================================
+
+    const healthyServices =
+        Object.values(services)
+            .filter(service =>
+                service.status === "HEALTHY"
+            ).length;
+
+    const totalServices =
+        Object.keys(services).length;
+
+    const affectedServices =
+        totalServices - healthyServices;
+
+
+    // ==================================================
     // SIN INTERVENCIÓN
     // ==================================================
 
     if(!action){
 
-        if(situation){
+        // --------------------------------------------------
+        // INCIDENTE SIN ATENDER
+        // --------------------------------------------------
 
-            situation.textContent = "OPERATIVO";
+        if(
+            currentSimulationMode === "INCIDENT" &&
+            affectedServices > 0
+        ){
 
-            situation.className =
-                "text-xs font-semibold text-green-400";
+            if(situation){
+
+                situation.textContent =
+                    "🔴 INCIDENTE DETECTADO";
+
+                situation.className =
+                    "text-xs font-semibold text-red-400";
+
+            }
+
+            if(message){
+
+                message.textContent =
+                    `Se han detectado ${affectedServices} servicios afectados. Se requiere intervención operativa.`;
+
+            }
+
+            // Los usuarios están potencialmente expuestos
+            // mientras el incidente permanece sin atender.
+
+            if(usersImpact){
+
+                usersImpact.textContent =
+                    Math.round(system.users);
+
+            }
+
+            if(cost){
+
+                cost.textContent =
+                    "€0";
+
+            }
 
         }
 
-        if(message){
+        // --------------------------------------------------
+        // SISTEMA OPERATIVO
+        // --------------------------------------------------
 
-            message.textContent =
-                "El sistema funciona con normalidad. No es necesaria ninguna intervención.";
+        else{
 
-        }
+            if(situation){
 
-        if(cost){
+                situation.textContent =
+                    "OPERATIVO";
 
-            cost.textContent = "€0";
+                situation.className =
+                    "text-xs font-semibold text-green-400";
 
-        }
+            }
 
-        if(usersImpact){
+            if(message){
 
-            usersImpact.textContent = "0";
+                message.textContent =
+                    "El sistema funciona con normalidad. No es necesaria ninguna intervención.";
+
+            }
+
+            if(cost){
+
+                cost.textContent =
+                    "€0";
+
+            }
+
+            if(usersImpact){
+
+                usersImpact.textContent =
+                    "0";
+
+            }
 
         }
 
@@ -5781,100 +6129,71 @@ function renderOperationalIntervention(){
 
 
     // ==================================================
-    // CALCULAR ESTADO DE LA INTERVENCIÓN
-    // ==================================================
-    
-    const cpu =
-        system.cpu;
-    
-    const latency =
-        system.latency;
-    
-    
-    // ==================================================
-    // ESTADO DE LOS SERVICIOS
-    // ==================================================
-    
-    const healthyServices =
-        Object.values(services)
-            .filter(service =>
-                service.status === "HEALTHY"
-            ).length;
-    
-    const totalServices =
-        Object.keys(services).length;
-    
-    
-    // ==================================================
     // EVOLUCIÓN DE LAS MÉTRICAS
     // ==================================================
-    
+
+    const cpu =
+        system.cpu;
+
+    const latency =
+        system.latency;
+
     const cpuImproving =
         system.cpu < simulation.previousCpu;
-    
+
     const latencyImproving =
         system.latency < simulation.previousLatency;
-    
-    
+
+
     // ==================================================
-    // ESTADO INICIAL
+    // ESTADO DE LA INTERVENCIÓN
     // ==================================================
-    
+
     let level = "WARNING";
     let icon = "🟡";
     let title = "Intervención en curso";
-    
-    
-    // ==================================================
-    // 🟢 INTERVENCIÓN EFECTIVA
-    // ==================================================
-    
+
+
     if(
         healthyServices === totalServices &&
         totalServices > 0
     ){
-    
+
         level = "HEALTHY";
         icon = "🟢";
         title = "Intervención efectiva";
-    
-    }
-    
-    
-    // ==================================================
-    // 🟡 INTERVENCIÓN EN CURSO
-    // ==================================================
-    
-    else if(
+
+    }else if(
         cpuImproving ||
         latencyImproving ||
         healthyServices > 0
     ){
-    
+
         level = "WARNING";
         icon = "🟡";
         title = "Intervención en curso";
-    
-    }
-    
-    
-    // ==================================================
-    // 🔴 INTERVENCIÓN INSUFICIENTE
-    // ==================================================
-    
-    else{
-    
+
+    }else{
+
         level = "CRITICAL";
         icon = "🔴";
         title = "Intervención insuficiente";
-    
+
     }
 
+
     // ==================================================
-    // DESCRIPCIÓN DE LA DECISIÓN
+    // DESCRIPCIÓN
     // ==================================================
 
+    let description = "";
+
+
     switch(action){
+
+        // ==================================================
+        // HIGH LOAD
+        // ==================================================
 
         case "redistribute":
 
@@ -5924,6 +6243,42 @@ function renderOperationalIntervention(){
         break;
 
 
+        // ==================================================
+        // INCIDENT
+        // ==================================================
+
+        case "incident-recover":
+
+            description =
+                "La recuperación se centra en restablecer progresivamente el servicio afectado por el incidente.";
+
+        break;
+
+
+        case "incident-isolate":
+
+            description =
+                "La dependencia crítica ha sido aislada para evitar que el fallo continúe propagándose por la arquitectura.";
+
+        break;
+
+
+        case "incident-partial":
+
+            description =
+                "Se mantiene la operación parcial, priorizando los servicios que todavía permanecen disponibles.";
+
+        break;
+
+
+        case "incident-no-action":
+
+            description =
+                "No se aplica ninguna medida. Los usuarios continúan expuestos a la indisponibilidad provocada por el incidente.";
+
+        break;
+
+
         default:
 
             description =
@@ -5946,11 +6301,13 @@ function renderOperationalIntervention(){
 
         if(level === "HEALTHY"){
 
-            color = "text-green-400";
+            color =
+                "text-green-400";
 
         }else if(level === "CRITICAL"){
 
-            color = "text-red-400";
+            color =
+                "text-red-400";
 
         }
 
@@ -5973,30 +6330,32 @@ function renderOperationalIntervention(){
 
 
     // ==================================================
-    // IMPACTO ECONÓMICO SIMBÓLICO
+    // COSTE DE LA INTERVENCIÓN
     // ==================================================
 
-    let costLevel = "€";
+    const interventionCosts = {
 
-    if(action === "redistribute"){
+        // HIGH LOAD
+        "redistribute": "€€",
+        "limit-users": "€",
+        "reduce-load": "€",
+        "restart-service": "€€",
+        "protect-services": "€€€",
+        "no-action": "€0",
 
-        costLevel = "€€";
+        // INCIDENT
+        "incident-recover": "€€",
+        "incident-isolate": "€€",
+        "incident-partial": "€€",
+        "incident-no-action": "€0"
 
-    }else if(action === "restart-service"){
-
-        costLevel = "€€";
-
-    }else if(action === "protect-services"){
-
-        costLevel = "€€€";
-
-    }
+    };
 
 
     if(cost){
 
         cost.textContent =
-            costLevel;
+            interventionCosts[action] || "€";
 
     }
 
@@ -6004,14 +6363,27 @@ function renderOperationalIntervention(){
     // ==================================================
     // USUARIOS AFECTADOS
     // ==================================================
-
+    
     if(usersImpact){
-
-        usersImpact.textContent =
-            simulation.intervention.userImpact > 0
-                ? simulation.intervention.userImpact
-                : "0";
-
+    
+        if(
+            currentSimulationMode === "INCIDENT"
+        ){
+    
+            usersImpact.textContent =
+                Math.round(
+                    simulation.intervention.incidentAffectedUsers
+                );
+    
+        }else{
+    
+            usersImpact.textContent =
+                simulation.intervention.userImpact > 0
+                    ? simulation.intervention.userImpact
+                    : "0";
+    
+        }
+    
     }
 
 }
@@ -6031,27 +6403,206 @@ function renderInterventionImpact(){
     const usersElement =
         document.getElementById("operationalUsersImpact");
 
+    const servicesElement =
+        document.getElementById("operationalServicesImpact");
 
-    if(!costElement || !usersElement){
+    const messageElement =
+        document.getElementById("operationalImpactMessage");
+
+
+    if(
+        !costElement ||
+        !usersElement ||
+        !servicesElement ||
+        !messageElement
+    ){
         return;
     }
 
 
-    // Sin intervención
+    // ==================================================
+    // SERVICIOS
+    // ==================================================
+
+    const totalServices =
+        Object.keys(services).length;
+
+    const affectedServices =
+        Object.values(services)
+            .filter(service =>
+                service.status === "CRITICAL" ||
+                service.status === "DOWN"
+            ).length;
+
+
+    servicesElement.textContent =
+        `${affectedServices} / ${totalServices}`;
+
+
+    // ==================================================
+    // LECTURA OPERATIVA
+    // ==================================================
+    
+    let impactMessage =
+        "No hay ninguna intervención activa.";
+    
+    
+    if(currentSimulationMode === "INCIDENT"){
+    
+        switch(action){
+    
+            case "incident-no-action":
+    
+                impactMessage =
+                    affectedServices > 0
+                        ? "🔴 Sin intervención, el incidente continúa afectando a la plataforma. La afectación puede mantenerse o aumentar mientras existan servicios en estado crítico."
+                        : "🟢 No se han detectado servicios críticos o caídos en este momento.";
+    
+            break;
+    
+    
+            case "incident-partial":
+    
+                impactMessage =
+                    affectedServices > 0
+                        ? "🟡 La operación parcial mantiene disponibles los servicios que continúan funcionando, aunque parte de la plataforma permanece afectada."
+                        : "🟢 La operación parcial ya no presenta servicios críticos o caídos.";
+    
+            break;
+    
+    
+            case "incident-isolate":
+    
+                impactMessage =
+                    affectedServices > 0
+                        ? "🟡 El aislamiento está conteniendo la propagación del incidente. Algunos servicios continúan afectados, pero el fallo no debería seguir extendiéndose."
+                        : "🟢 La propagación está contenida y no quedan servicios críticos o caídos.";
+    
+            break;
+    
+    
+            case "incident-recover":
+    
+                impactMessage =
+                    affectedServices > 0
+                        ? "🟢 La recuperación está actuando sobre el servicio afectado. El objetivo es reducir progresivamente el número de servicios afectados."
+                        : "🟢 El servicio afectado se ha recuperado y no quedan servicios críticos o caídos.";
+    
+            break;
+    
+    
+            default:
+    
+                impactMessage =
+                    "🔎 El incidente está siendo monitorizado.";
+    
+        }
+    
+    }
+    
+    
+    else{
+    
+        switch(action){
+    
+            case "redistribute":
+    
+                impactMessage =
+                    "🟡 La redistribución reduce la presión sobre los servicios más exigidos sin limitar directamente el acceso de los usuarios.";
+    
+            break;
+    
+    
+            case "limit-users":
+    
+                impactMessage =
+                    "🟡 La carga del sistema se reduce, pero parte de los usuarios puede quedar temporalmente sin atención.";
+    
+            break;
+    
+    
+            case "reduce-load":
+    
+                impactMessage =
+                    "🟡 Se liberan recursos reduciendo procesos no prioritarios para proteger la operación principal.";
+    
+            break;
+    
+    
+            case "restart-service":
+    
+                impactMessage =
+                    "🟡 El reinicio puede recuperar el servicio afectado, aunque implica una interrupción temporal.";
+    
+            break;
+    
+    
+            case "protect-services":
+    
+                impactMessage =
+                    "🟡 Se priorizan los servicios esenciales, sacrificando parte de la capacidad disponible.";
+    
+            break;
+    
+    
+            case "no-action":
+    
+                impactMessage =
+                    "🔎 No se aplica ninguna medida. La evolución depende del comportamiento natural de la carga.";
+    
+            break;
+    
+        }
+    
+    }
+    
+    
+    messageElement.textContent =
+        impactMessage;
+
+    // ==================================================
+    // SIN INTERVENCIÓN
+    // ==================================================
 
     if(!action){
 
-        costElement.textContent = "€0";
-        usersElement.textContent = "0";
+        if(currentSimulationMode === "INCIDENT"){
+
+            if(affectedServices > 0){
+
+                costElement.textContent =
+                    "€0";
+
+                usersElement.textContent =
+                    Math.round(
+                        simulation.intervention.incidentAffectedUsers
+                    );
+
+                return;
+
+            }
+
+        }
+
+
+        costElement.textContent =
+            "€0";
+
+        usersElement.textContent =
+            "0";
 
         return;
 
     }
 
 
-    // Coste simbólico de cada intervención
+    // ==================================================
+    // COSTES
+    // ==================================================
 
     const interventionCosts = {
+
+        // HIGH LOAD
 
         "redistribute": "€€",
 
@@ -6063,7 +6614,18 @@ function renderInterventionImpact(){
 
         "protect-services": "€€€",
 
-        "no-action": "€"
+        "no-action": "€0",
+
+
+        // INCIDENT
+
+        "incident-recover": "€€",
+
+        "incident-isolate": "€€",
+
+        "incident-partial": "€€",
+
+        "incident-no-action": "€0"
 
     };
 
@@ -6072,231 +6634,100 @@ function renderInterventionImpact(){
         interventionCosts[action] || "€";
 
 
-    usersElement.textContent =
-        simulation.intervention.userImpact;
+    // ==================================================
+    // USUARIOS
+    // ==================================================
 
-}
+    if(currentSimulationMode === "INCIDENT"){
 
-
-
-// ======================================================
-// APM VIEW
-// ======================================================
-
-function renderAPMView(){
-
-    renderAPMSummary();
-
-    renderAPMPerformance();
-
-    renderAPMHealth();
-
-    renderAPMInsights();
-
-}
-
-// ======================================================
-// APM SUMMARY
-// ======================================================
-
-function renderAPMSummary(){
-
-    const container =
-        document.getElementById("apmSummary");
-
-    if(!container) return;
+        const currentUsers =
+            Math.round(system.users);
 
 
-    const metrics = [
+        switch(action){
 
-        {
-            title: "Latencia",
-            value: `${system.latency.toFixed(0)} ms`,
-            icon: "⚡"
-        },
+            // ------------------------------------------
+            // RECUPERAR SERVICIO
+            // ------------------------------------------
 
-        {
-            title: "Throughput",
-            value: `${system.throughput} req/min`,
-            icon: "📈"
-        },
+            case "incident-recover":
 
-        {
-            title: "Tasa de Error",
-            value: `${system.errorRate.toFixed(2)} %`,
-            icon: "⚠️"
-        },
+                usersElement.textContent =
+                    Math.round(
+                        currentUsers * 0.10
+                    );
 
-        {
-            title: "Usuarios Activos",
-            value: system.users,
-            icon: "👥"
-        }
-
-    ];
+            break;
 
 
-    container.innerHTML = "";
+            // ------------------------------------------
+            // AISLAR DEPENDENCIA
+            // ------------------------------------------
+
+            case "incident-isolate":
+
+                usersElement.textContent =
+                    Math.round(
+                        currentUsers * 0.30
+                    );
+
+            break;
 
 
-    metrics.forEach(metric => {
+            // ------------------------------------------
+            // OPERACIÓN PARCIAL
+            // ------------------------------------------
 
-        container.innerHTML += `
+            case "incident-partial":
 
-            <div class="card p-6">
+                usersElement.textContent =
+                    Math.round(
+                        currentUsers *
+                        (
+                            affectedServices /
+                            totalServices
+                        )
+                    );
 
-                <div class="flex justify-between items-start">
-
-                    <div>
-
-                        <div
-                            class="text-xs uppercase tracking-widest text-gray-400">
-
-                            ${metric.title}
-
-                        </div>
-
-                        <div
-                            class="text-3xl font-bold mt-3">
-
-                            ${metric.value}
-
-                        </div>
-
-                    </div>
-
-                    <div class="text-2xl">
-
-                        ${metric.icon}
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        `;
-
-    });
-
-}
-
-// ======================================================
-// APM PERFORMANCE METRICS
-// ======================================================
-
-function renderAPMPerformance(){
-
-    const container =
-        document.getElementById("apmPerformanceMetrics");
-
-    if(!container) return;
+            break;
 
 
-    const metrics = [
+            // ------------------------------------------
+            // NO INTERVENIR
+            // ------------------------------------------
 
-        {
-            name: "Uso de la CPU",
-            value: system.cpu,
-            unit: "%",
-            warning: 70,
-            critical: 85
-        },
+            case "incident-no-action":
 
-        {
-            name: "Uso de la Memoria",
-            value: system.memory,
-            unit: "%",
-            warning: 75,
-            critical: 90
-        },
+                usersElement.textContent =
+                    Math.round(
+                        simulation.intervention
+                            .incidentAffectedUsers
+                    );
 
-        {
-            name: "Latencia de respuesta",
-            value: system.latency,
-            unit: " ms",
-            warning: 170,
-            critical: 220
-        }
-
-    ];
+            break;
 
 
-    container.innerHTML = "";
+            // ------------------------------------------
+            // RESTO
+            // ------------------------------------------
 
+            default:
 
-    metrics.forEach(metric => {
-
-        let color = "#22c55e";
-
-        if(metric.value >= metric.warning){
-
-            color = "#f59e0b";
+                usersElement.textContent =
+                    simulation.intervention.userImpact || 0;
 
         }
 
-        if(metric.value >= metric.critical){
+    }else{
 
-            color = "#ef4444";
+        // ==================================================
+        // HIGH LOAD
+        // ==================================================
 
-        }
+        usersElement.textContent =
+            simulation.intervention.userImpact || 0;
 
-
-        const percentage =
-
-            Math.min(
-                100,
-                metric.unit === " ms"
-                    ? (metric.value / 250) * 100
-                    : metric.value
-            );
-
-
-        container.innerHTML += `
-
-            <div>
-
-                <div class="flex justify-between mb-2">
-
-                    <span class="text-sm">
-
-                        ${metric.name}
-
-                    </span>
-
-                    <span
-                        class="font-semibold"
-                        style="color:${color}">
-
-                        ${metric.value.toFixed(
-                            metric.unit === " ms" ? 0 : 1
-                        )}${metric.unit}
-
-                    </span>
-
-                </div>
-
-
-                <div
-                    class="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
-
-                    <div
-                        class="h-2 rounded-full"
-                        style="
-                            width:${percentage}%;
-                            background:${color};
-                            transition:width .5s ease;
-                        ">
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        `;
-
-    });
+    }
 
 }
 
@@ -6557,6 +6988,19 @@ function renderAPMInsights(){
         `;
 
     });
+
+}
+
+// ======================================================
+// APM VIEW
+// ======================================================
+
+function renderAPMView(){
+
+    // Renderizado general de la vista APM
+
+    renderAPMHealth();
+    renderAPMInsights();
 
 }
 
