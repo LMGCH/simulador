@@ -2,11 +2,11 @@
 
 
 
-\[!\ [GitHub Pages](https://shields.io)](https://lmgch.github.io/simulador/)
+\[!\[Monitorización](https://img.shields.io/badge/github-repo-blue?logo=github)](https://lmgch.github.io/simulador/)
 
-\[!\ [Version](https://shields.io)](https://img.shields.io/badge/version-1.0.0-blue)
+\[!\ [1.1.0--dev](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/LMGCH/simulador)
 
-\[!\ [Topic](https://shields.io)](https://img.shields.io/badge/github-repo-blue?logo=github)
+\[!\ [simulación](https://img.shields.io/badge/just%20the%20message-8A2BE2)](https://lmgch.github.io/simulador/)
 
 
 
