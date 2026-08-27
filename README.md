@@ -14,7 +14,7 @@ Un entorno interactivo de simulación "GameDay" diseñado para poner a prueba la
 
 
 
-👉 \*\*\[Probar el simulador en vivo aquí](https://lmgch.github.io/simulador/)\*\*
+👉 \*\*\[Probar el simulador en vivo aquí]\*\* (https://lmgch.github.io/simulador/)
 
 
 
@@ -184,7 +184,7 @@ open index.html
 
 
 
-Desarrollado con 💻 por \*\*\[Luis Miguel GCH / www.linkedin.com/in/luis-miguel-galacho]\*\*.
+Desarrollado con 💻 por \*\*\[Luis Miguel GCH \*\* / www.linkedin.com/in/luis-miguel-galacho].
 
 
 
