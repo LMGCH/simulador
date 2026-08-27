@@ -2,11 +2,11 @@
 
 
 
-\[!\[GitHub Pages](https://shields.io)](https://github.io)
+\[!\ [GitHub Pages](https://shields.io)](https://lmgch.github.io/simulador/)
 
-\[!\[Version](https://shields.io)](#)
+\[!\ [Version](https://shields.io)](https://img.shields.io/badge/version-1.0.0-blue)
 
-\[!\[Topic](https://shields.io)](#)
+\[!\ [Topic](https://shields.io)](https://img.shields.io/badge/github-repo-blue?logo=github)
 
 
 
