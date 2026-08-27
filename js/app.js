@@ -1012,25 +1012,103 @@ function simulateSystem(){
         errorTransitionSpeed;
 
 
+
 // ==============================================
-// IMPACTO DE LA INTERVENCIÓN SOBRE LOS USUARIOS
+// OBJETIVO DE USUARIOS SEGÚN ESCENARIO
+// ==============================================
+
+const scenarioUsers =
+    scenarios[currentSimulationMode].users;
+
+
+// ==============================================
+// HIGH LOAD
 // ==============================================
 
 if(
-    simulation.intervention.currentAction === "limit-users"
+    currentSimulationMode === "HIGH_LOAD"
+){
+
+    // La sobrecarga lleva progresivamente
+    // al sistema hacia el rango definido
+    // para este escenario.
+
+    if(
+        simulation.targetUsers <
+        scenarioUsers.min
+    ){
+
+        simulation.targetUsers =
+            scenarioUsers.min;
+
+    }
+
+}
+
+
+// ==============================================
+// INCIDENT
+// ==============================================
+
+else if(
+    currentSimulationMode === "INCIDENT"
+){
+
+    // El incidente reduce progresivamente
+    // la población atendida por el sistema.
+
+    if(
+        simulation.targetUsers >
+        scenarioUsers.max
+    ){
+
+        simulation.targetUsers =
+            scenarioUsers.max;
+
+    }
+
+}
+
+
+// ==============================================
+// NORMAL
+// ==============================================
+
+else{
+
+    // En NORMAL utilizamos el objetivo base
+    // dentro del rango normal.
+
+    simulation.targetUsers =
+        Math.min(
+            simulation.baseTargetUsers,
+            scenarioUsers.max
+        );
+
+    simulation.targetUsers =
+        Math.max(
+            simulation.targetUsers,
+            scenarioUsers.min
+        );
+
+}
+
+
+// ==============================================
+// LIMITACIÓN DE USUARIOS
+// ==============================================
+
+if(
+    simulation.intervention.currentAction ===
+    "limit-users"
 ){
 
     simulation.targetUsers =
         Math.max(
-            scenarios[currentSimulationMode].users.min,
-            simulation.baseTargetUsers -
+            scenarioUsers.min,
+            simulation.targetUsers -
             simulation.intervention.userImpact
         );
-
-}else{
-
-    simulation.targetUsers =
-        simulation.baseTargetUsers;
 
 }
 
@@ -3237,6 +3315,13 @@ function renderOperationalAssessment(){
 
 
     // ==================================================
+    // CURRENT INTERVENTION
+    // ==================================================
+
+    const action =
+        simulation.intervention.currentAction;
+   
+    // ==================================================
     // RECOVERY DETECTION
     // ==================================================
 
@@ -3255,9 +3340,6 @@ function renderOperationalAssessment(){
 
 
     if(recoveryStarted){
-
-        // Mantener el estado visual RECOVERING
-        // durante unos segundos.
 
         assessmentRecoveryUntil =
             Date.now() + 6000;
@@ -3337,7 +3419,7 @@ function renderOperationalAssessment(){
         if(system.latency > 170){
 
             conditions.push(
-                "La latencia está por encima de su umbral configurado."
+                "la latencia está por encima de su umbral configurado."
             );
 
         }
@@ -3369,19 +3451,19 @@ function renderOperationalAssessment(){
         }
         else if(
             conditions.includes(
-                "El uso de CPU está por encima de sus umbrales configurados."
+                "El uso de CPU está por encima de su umbral configurado."
             ) &&
             conditions.includes(
-                "y la latencia está por encima de sus umbrales configurados."
+                "la latencia está por encima de su umbral configurado."
             )
         ){
 
             const remaining =
                 conditions.filter(condition =>
                     condition !==
-                        "El uso de CPU está por encima de sus umbrales configurados." &&
+                        "El uso de CPU está por encima de su umbral configurado." &&
                     condition !==
-                        "y la latencia está por encima de sus umbrales configurados."
+                        "la latencia está por encima de su umbral configurado."
                 );
 
             details =
@@ -3409,6 +3491,120 @@ function renderOperationalAssessment(){
         conclusion =
             "🟡 Se recomienda continuar con la monitorización.";
 
+
+        // ==================================================
+        // HIGH LOAD — INTERVENCIÓN
+        // ==================================================
+
+        if(scenario === "HIGH_LOAD" && action){
+
+            switch(action){
+
+                case "redistribute":
+
+                    situation =
+                        "La sobrecarga está siendo contenida mediante redistribución de carga.";
+
+                    details =
+                        "La intervención está reduciendo la presión sobre CPU y latencia mediante una distribución más equilibrada de la carga.";
+
+                    impact =
+                        "La medida mejora la estabilidad de la plataforma sin introducir un impacto directo sobre los usuarios.";
+
+                    conclusion =
+                        "🟡 Intervención activa — continuar monitorizando la evolución.";
+
+                break;
+
+
+                case "limit-users":
+
+                    situation =
+                        "La sobrecarga está siendo contenida mediante limitación de usuarios.";
+
+                    details =
+                        "Se ha reducido progresivamente la carga objetivo para aliviar la presión sobre la plataforma.";
+
+                    impact =
+                        `La medida reduce la presión sobre CPU y latencia, pero introduce un impacto operativo estimado de ${simulation.intervention.userImpact} usuarios.`;
+
+                    conclusion =
+                        "🟡 Intervención activa — mantener la medida mientras se estabiliza la plataforma.";
+
+                break;
+
+
+                case "reduce-load":
+
+                    situation =
+                        "La sobrecarga está siendo contenida mediante reducción de carga.";
+
+                    details =
+                        "La intervención está reduciendo la presión de trabajo de la plataforma para favorecer su estabilización.";
+
+                    impact =
+                        "La medida mejora las condiciones operativas sin limitar directamente el acceso de los usuarios.";
+
+                    conclusion =
+                        "🟡 Intervención activa — continuar monitorizando la recuperación.";
+
+                break;
+
+
+                case "restart-service":
+
+                    situation =
+                        "La sobrecarga está siendo contenida mediante el reinicio de un servicio afectado.";
+
+                    details =
+                        "Se ha iniciado la recuperación acelerada del servicio seleccionado.";
+
+                    impact =
+                        `El reinicio puede producir un impacto temporal estimado de ${simulation.intervention.userImpact} usuarios mientras el servicio se recupera.`;
+
+                    conclusion =
+                        "🟡 Recuperación de servicio en curso — continuar monitorizando.";
+
+                break;
+
+
+                case "protect-services":
+
+                    situation =
+                        "La sobrecarga está siendo contenida mediante protección de servicios prioritarios.";
+
+                    details =
+                        "La intervención está reduciendo la presión sobre la plataforma y priorizando la continuidad de los servicios.";
+
+                    impact =
+                        `La medida favorece la continuidad operativa, con un impacto estimado de ${simulation.intervention.userImpact} usuarios.`;
+
+                    conclusion =
+                        "🟡 Intervención activa — mantener la monitorización.";
+
+                break;
+
+
+                case "no-action":
+
+                    situation =
+                        "La sobrecarga permanece sin intervención.";
+
+                    details =
+                        "La plataforma continúa operativa, pero la carga elevada sigue requiriendo monitorización.";
+
+                    impact =
+                        "No se ha aplicado ninguna medida de contención ni se ha generado un coste directo de intervención.";
+
+                    conclusion =
+                        "🟡 Se recomienda monitorizar la evolución y valorar una intervención.";
+
+                break;
+
+            }
+
+        }
+
     }
 
 
@@ -3432,7 +3628,7 @@ function renderOperationalAssessment(){
                     criticalServices === 1
                         ? "servicio está"
                         : "servicios están"
-                } en estado crítico o no disponible/s`
+                } en estado crítico o no disponible.`
             );
 
         }
@@ -3440,7 +3636,7 @@ function renderOperationalAssessment(){
         if(system.errorRate > 0.30){
 
             conditions.push(
-                "la tasa de errores está por encima de su umbral crítico configurado."
+                "La tasa de errores está por encima de su umbral crítico configurado."
             );
 
         }
@@ -3455,13 +3651,13 @@ function renderOperationalAssessment(){
         else if(conditions.length === 1){
 
             details =
-                `${conditions[0]}.`;
+                conditions[0];
 
         }
         else{
 
             details =
-                `${conditions[0]}. ${conditions[1]}.`;
+                `${conditions[0]} ${conditions[1]}`;
 
         }
 
@@ -3471,6 +3667,204 @@ function renderOperationalAssessment(){
 
         conclusion =
             "🔴 Se recomienda una investigación inmediata.";
+
+
+        // ==================================================
+        // HIGH LOAD — INTERVENCIÓN EN ESTADO CRÍTICO
+        // ==================================================
+
+        if(scenario === "HIGH_LOAD" && action){
+
+            switch(action){
+
+                case "redistribute":
+
+                    situation =
+                        "La sobrecarga crítica está siendo contenida mediante redistribución de carga.";
+
+                    details =
+                        "La intervención está aliviando la presión de CPU y latencia, aunque persisten condiciones críticas.";
+
+                    impact =
+                        "La medida busca evitar una degradación mayor mientras la plataforma permanece bajo una carga elevada.";
+
+                    conclusion =
+                        "🔴 Contención activa — requiere monitorización continua.";
+
+                break;
+
+
+                case "limit-users":
+
+                    situation =
+                        "La sobrecarga crítica está siendo contenida mediante limitación de usuarios.";
+
+                    details =
+                        "Se ha reducido la carga objetivo para disminuir la presión sobre la plataforma.";
+
+                    impact =
+                        `La medida introduce un impacto operativo estimado de ${simulation.intervention.userImpact} usuarios para favorecer la estabilidad del sistema.`;
+
+                    conclusion =
+                        "🔴 Contención activa — mantener la medida y monitorizar la recuperación.";
+
+                break;
+
+
+                case "reduce-load":
+
+                    situation =
+                        "La sobrecarga crítica está siendo contenida mediante reducción de carga.";
+
+                    details =
+                        "La intervención está reduciendo la presión sobre la plataforma, aunque todavía persisten condiciones críticas.";
+
+                    impact =
+                        "La medida busca estabilizar la plataforma antes de que la degradación se extienda a más servicios.";
+
+                    conclusion =
+                        "🔴 Contención activa — requiere monitorización continua.";
+
+                break;
+
+
+                case "restart-service":
+
+                    situation =
+                        "La sobrecarga crítica está siendo tratada mediante el reinicio de un servicio afectado.";
+
+                    details =
+                        "Se ha iniciado la recuperación acelerada del servicio seleccionado.";
+
+                    impact =
+                        `El reinicio puede producir un impacto temporal estimado de ${simulation.intervention.userImpact} usuarios.`;
+
+                    conclusion =
+                        "🔴 Recuperación de servicio en curso — monitorización continua.";
+
+                break;
+
+
+                case "protect-services":
+
+                    situation =
+                        "La sobrecarga crítica está siendo contenida mediante protección de servicios prioritarios.";
+
+                    details =
+                        "La intervención está priorizando la continuidad de los servicios mientras se reduce la presión sobre la plataforma.";
+
+                    impact =
+                        `La medida favorece la continuidad operativa, con un impacto estimado de ${simulation.intervention.userImpact} usuarios.`;
+
+                    conclusion =
+                        "🔴 Contención activa — requiere monitorización continua.";
+
+                break;
+
+
+                case "no-action":
+
+                    situation =
+                        "La sobrecarga crítica permanece sin intervención.";
+
+                    details =
+                        "La plataforma presenta condiciones críticas y no se ha aplicado ninguna medida de contención.";
+
+                    impact =
+                        "La ausencia de intervención puede favorecer la persistencia o extensión de la degradación.";
+
+                    conclusion =
+                        "🔴 Se recomienda intervenir de inmediato.";
+
+                break;
+
+            }
+
+        }
+
+
+        // ==================================================
+        // INCIDENT
+        // ==================================================
+
+        if(scenario === "INCIDENT" && action){
+
+            switch(action){
+
+                case "incident-recover":
+
+                    situation =
+                        "El incidente está siendo tratado mediante recuperación de servicio.";
+
+                    details =
+                        "La intervención está acelerando la recuperación del servicio afectado y favoreciendo la recuperación de sus dependencias.";
+
+                    impact =
+                        `La medida reduce progresivamente el impacto del incidente. Impacto acumulado estimado: ${Math.round(simulation.intervention.incidentAffectedUsers)} usuarios.`;
+
+                    conclusion =
+                        "🔵 Recuperación de incidente en curso — continuar monitorizando.";
+
+                break;
+
+
+                case "incident-isolate":
+
+                    situation =
+                        "El incidente está siendo contenido mediante aislamiento de una dependencia.";
+
+                    details =
+                        "La dependencia afectada ha sido aislada para limitar la propagación del incidente y favorecer la estabilización de los servicios.";
+
+                    impact =
+                        `La medida limita la propagación del incidente. Impacto acumulado estimado: ${Math.round(simulation.intervention.incidentAffectedUsers)} usuarios.`;
+
+                    conclusion =
+                        "🟡 Incidente contenido parcialmente — continuar monitorizando.";
+
+                break;
+
+
+                case "incident-partial":
+
+                    situation =
+                        "El incidente está siendo gestionado mediante operación parcial.";
+
+                    details =
+                        "Se mantiene la continuidad parcial de la plataforma mientras los servicios afectados se recuperan progresivamente.";
+
+                    impact =
+                        `La medida mantiene parte de la operación, con un impacto acumulado estimado de ${Math.round(simulation.intervention.incidentAffectedUsers)} usuarios.`;
+
+                    conclusion =
+                        "🟡 Operación parcial activa — continuar monitorizando.";
+
+                break;
+
+
+                case "incident-no-action":
+
+                    situation =
+                        "El incidente permanece sin intervención.";
+
+                    details =
+                        `${criticalServices} ${
+                            criticalServices === 1
+                                ? "servicio continúa"
+                                : "servicios continúan"
+                        } en estado crítico o no disponible y el impacto puede seguir aumentando.`;
+
+                    impact =
+                        `El incidente continúa sin medidas de contención. Impacto acumulado estimado: ${Math.round(simulation.intervention.incidentAffectedUsers)} usuarios.`;
+
+                    conclusion =
+                        "🔴 Se recomienda intervenir de inmediato.";
+
+                break;
+
+            }
+
+        }
 
     }
 
@@ -5736,15 +6130,41 @@ function updateInterventionEffects(){
     // ==================================================
     // SIN INTERVENCIÓN SELECCIONADA
     // ==================================================
-
+    
     if(!action){
-
+    
         simulation.intervention.cpuRelief = 0;
         simulation.intervention.latencyRelief = 0;
         simulation.intervention.userImpact = 0;
-
+    
+    
+        // ==================================================
+        // IMPACTO ACUMULATIVO DEL INCIDENTE SIN INTERVENCIÓN
+        // ==================================================
+    
+        if(
+            currentSimulationMode === "INCIDENT"
+        ){
+    
+            const affectedServices =
+                Object.values(services)
+                    .filter(service =>
+                        service.status === "CRITICAL" ||
+                        service.status === "DOWN"
+                    ).length;
+    
+    
+            if(affectedServices > 0){
+    
+                simulation.intervention.incidentAffectedUsers +=
+                    affectedServices * 8;
+    
+            }
+    
+        }
+    
         return;
-
+    
     }
 
 
@@ -6033,98 +6453,169 @@ function renderOperationalIntervention(){
         totalServices - healthyServices;
 
 
+
     // ==================================================
     // SIN INTERVENCIÓN
     // ==================================================
-
+    
     if(!action){
-
+    
         // --------------------------------------------------
         // INCIDENTE SIN ATENDER
         // --------------------------------------------------
-
+    
         if(
             currentSimulationMode === "INCIDENT" &&
             affectedServices > 0
         ){
-
+    
             if(situation){
-
+    
                 situation.textContent =
                     "🔴 INCIDENTE DETECTADO";
-
+    
                 situation.className =
                     "text-xs font-semibold text-red-400";
-
+    
             }
-
+    
             if(message){
-
+    
                 message.textContent =
                     `Se han detectado ${affectedServices} servicios afectados. Se requiere intervención operativa.`;
-
+    
             }
-
-            // Los usuarios están potencialmente expuestos
-            // mientras el incidente permanece sin atender.
-
+    
             if(usersImpact){
-
+    
                 usersImpact.textContent =
                     Math.round(system.users);
-
+    
             }
-
+    
             if(cost){
-
+    
                 cost.textContent =
                     "€0";
-
+    
             }
-
+    
         }
-
+    
+    
         // --------------------------------------------------
-        // SISTEMA OPERATIVO
+        // HIGH LOAD SIN INTERVENIR
         // --------------------------------------------------
-
-        else{
-
+    
+        else if(
+            currentSimulationMode === "HIGH_LOAD"
+        ){
+    
+            const critical =
+                system.status === "CRITICAL";
+    
             if(situation){
-
+    
                 situation.textContent =
-                    "OPERATIVO";
-
+                    critical
+                        ? "🔴 SOBRECARGA CRÍTICA"
+                        : "🟡 SOBRECARGA DETECTADA";
+    
                 situation.className =
-                    "text-xs font-semibold text-green-400";
-
+                    critical
+                        ? "text-xs font-semibold text-red-400"
+                        : "text-xs font-semibold text-yellow-400";
+    
             }
-
+    
+    
             if(message){
-
-                message.textContent =
-                    "El sistema funciona con normalidad. No es necesaria ninguna intervención.";
-
+    
+                if(affectedServices > 0){
+    
+                    message.textContent =
+                        critical
+                            ? `La sobrecarga está provocando degradación en ${affectedServices} servicios. Se recomienda intervenir para evitar una degradación mayor.`
+                            : `La plataforma está soportando una carga elevada y ya presenta afectación en ${affectedServices} servicios. Se recomienda monitorizar la evolución o aplicar una medida de intervención.`;
+    
+                }else{
+    
+                    message.textContent =
+                        "La plataforma está soportando una carga elevada, pero los servicios continúan operativos. Se recomienda monitorizar su evolución.";
+    
+                }
+    
             }
-
+    
+    
             if(cost){
-
+    
                 cost.textContent =
                     "€0";
-
+    
             }
-
+    
+    
             if(usersImpact){
 
+                const affectedUsers =
+                    Math.max(
+                        0,
+                        Math.round(
+                            system.users -
+                            scenarios.NORMAL.users.max
+                        )
+                    );
+            
+                usersImpact.textContent =
+                    affectedUsers;
+            
+            }
+    
+        }
+    
+    
+        // --------------------------------------------------
+        // SISTEMA OPERATIVOif(usersImpact){
+        // --------------------------------------------------
+    
+        else{
+    
+            if(situation){
+    
+                situation.textContent =
+                    "OPERATIVO";
+    
+                situation.className =
+                    "text-xs font-semibold text-green-400";
+    
+            }
+    
+            if(message){
+    
+                message.textContent =
+                    "El sistema funciona con normalidad. No es necesaria ninguna intervención.";
+    
+            }
+    
+            if(cost){
+    
+                cost.textContent =
+                    "€0";
+    
+            }
+    
+            if(usersImpact){
+    
                 usersImpact.textContent =
                     "0";
-
+    
             }
-
+    
         }
-
+    
         return;
-
+    
     }
 
 
@@ -6359,7 +6850,6 @@ function renderOperationalIntervention(){
 
     }
 
-
     // ==================================================
     // USUARIOS AFECTADOS
     // ==================================================
@@ -6375,19 +6865,37 @@ function renderOperationalIntervention(){
                     simulation.intervention.incidentAffectedUsers
                 );
     
+        }else if(
+            currentSimulationMode === "HIGH_LOAD"
+        ){
+    
+            const affectedUsers =
+                Math.max(
+                    0,
+                    Math.round(
+                        system.users -
+                        scenarios.NORMAL.users.max
+                    )
+                );
+    
+            usersImpact.textContent =
+                affectedUsers;
+
+            console.log(
+                "RENDER OPERATIONAL:",
+                affectedUsers
+            );
+    
         }else{
     
             usersImpact.textContent =
-                simulation.intervention.userImpact > 0
-                    ? simulation.intervention.userImpact
-                    : "0";
+                "0";
     
         }
     
     }
 
 }
-
 // ======================================================
 // RENDERIZADO DEL IMPACTO DE LA INTERVENCIÓN
 // ======================================================
@@ -6396,6 +6904,19 @@ function renderInterventionImpact(){
 
     const action =
         simulation.intervention.currentAction;
+
+        console.log(
+            "DEBUG HIGH_LOAD:",
+            {
+                mode: currentSimulationMode,
+                users: system.users,
+                normalCapacity: scenarios.NORMAL.users.max,
+                baseTargetUsers: simulation.baseTargetUsers,
+                targetUsers: simulation.targetUsers,
+                action: action,
+                userImpact: simulation.intervention.userImpact
+            }
+        );
 
     const costElement =
         document.getElementById("operationalCost");
@@ -6586,12 +7107,35 @@ function renderInterventionImpact(){
 
 
         costElement.textContent =
-            "€0";
-
+        "€0";
+    
+    if(currentSimulationMode === "HIGH_LOAD"){
+    
+        const affectedUsers =
+            Math.max(
+                0,
+                Math.round(
+                    system.users -
+                    scenarios.NORMAL.users.max
+                )
+            );
+    
+        usersElement.textContent =
+            affectedUsers;
+        
+        console.log(
+            "RENDER IMPACT:",
+            affectedUsers
+        );        
+  
+    }else{
+    
         usersElement.textContent =
             "0";
-
-        return;
+    
+    }
+    
+    return;
 
     }
 
@@ -6635,51 +7179,50 @@ function renderInterventionImpact(){
 
 
     // ==================================================
-    // USUARIOS
+    // USUARIOS AFECTADOS
     // ==================================================
-
+    
     if(currentSimulationMode === "INCIDENT"){
-
+    
         const currentUsers =
             Math.round(system.users);
-
-
+    
         switch(action){
-
+    
             // ------------------------------------------
             // RECUPERAR SERVICIO
             // ------------------------------------------
-
+    
             case "incident-recover":
-
+    
                 usersElement.textContent =
                     Math.round(
                         currentUsers * 0.10
                     );
-
+    
             break;
-
-
+    
+    
             // ------------------------------------------
             // AISLAR DEPENDENCIA
             // ------------------------------------------
-
+    
             case "incident-isolate":
-
+    
                 usersElement.textContent =
                     Math.round(
                         currentUsers * 0.30
                     );
-
+    
             break;
-
-
+    
+    
             // ------------------------------------------
             // OPERACIÓN PARCIAL
             // ------------------------------------------
-
+    
             case "incident-partial":
-
+    
                 usersElement.textContent =
                     Math.round(
                         currentUsers *
@@ -6688,45 +7231,65 @@ function renderInterventionImpact(){
                             totalServices
                         )
                     );
-
+    
             break;
-
-
+    
+    
             // ------------------------------------------
             // NO INTERVENIR
             // ------------------------------------------
-
+    
             case "incident-no-action":
-
+    
                 usersElement.textContent =
                     Math.round(
                         simulation.intervention
                             .incidentAffectedUsers
                     );
-
+    
             break;
-
-
+    
+    
             // ------------------------------------------
-            // RESTO
+            // SIN ACCIÓN / INCIDENTE
             // ------------------------------------------
-
+    
             default:
-
+    
                 usersElement.textContent =
-                    simulation.intervention.userImpact || 0;
-
+                    Math.round(
+                        simulation.intervention
+                            .incidentAffectedUsers
+                    );
+    
         }
-
-    }else{
-
-        // ==================================================
-        // HIGH LOAD
-        // ==================================================
-
+    
+    }else if(currentSimulationMode === "HIGH_LOAD"){
+    
+        // ------------------------------------------
+        // SOBRECARGA
+        // ------------------------------------------
+    
+        const normalCapacity =
+            scenarios.NORMAL.users.max;
+    
+        const affectedUsers =
+            Math.max(
+                0,
+                Math.round(
+                    system.users -
+                    normalCapacity
+                )
+            );
+    
         usersElement.textContent =
-            simulation.intervention.userImpact || 0;
-
+            affectedUsers;
+    
+    }else{
+    
+        usersElement.textContent =
+            "0";
+    
     }
 
 }
@@ -7861,67 +8424,127 @@ function initializeOperationalInterventions(){
     // ==================================================
     // ACTUALIZAR ACCIONES SEGÚN ESCENARIO
     // ==================================================
-
+    
     function updateOperationalActions(){
-
+    
         const scenario =
             scenarioSelect
                 ? scenarioSelect.value
                 : "NORMAL";
-
-
+    
+    
+        // ----------------------------------------------
+        // DESHABILITAR TODAS LAS ACCIONES POR DEFECTO
+        // ----------------------------------------------
+    
+        actions.forEach(button => {
+    
+            button.disabled = true;
+    
+            button.classList.add(
+                "opacity-50",
+                "cursor-not-allowed"
+            );
+    
+            button.classList.remove(
+                "hover:bg-[#30374d]"
+            );
+    
+        });
+    
+    
         // ----------------------------------------------
         // OCULTAR AMBOS PANELES
         // ----------------------------------------------
-
+    
         if(highLoadActions){
-
+    
             highLoadActions.classList.add(
                 "hidden"
             );
-
+    
         }
-
+    
         if(incidentActions){
-
+    
             incidentActions.classList.add(
                 "hidden"
             );
-
+    
         }
-
-
+    
+    
         // ----------------------------------------------
         // HIGH LOAD
         // ----------------------------------------------
-
+    
         if(
             scenario === "HIGH_LOAD" &&
             highLoadActions
         ){
-
+    
             highLoadActions.classList.remove(
                 "hidden"
             );
-
+    
+    
+            // Habilitar acciones HIGH LOAD
+    
+            highLoadActions
+                .querySelectorAll("button")
+                .forEach(button => {
+    
+                    button.disabled = false;
+    
+                    button.classList.remove(
+                        "opacity-50",
+                        "cursor-not-allowed"
+                    );
+    
+                    button.classList.add(
+                        "hover:bg-[#30374d]"
+                    );
+    
+                });
+    
         }
-
-
+    
+    
         // ----------------------------------------------
         // INCIDENT
         // ----------------------------------------------
-
+    
         if(
             scenario === "INCIDENT" &&
             incidentActions
         ){
-
+    
             incidentActions.classList.remove(
                 "hidden"
             );
-
+    
+    
+            // Habilitar acciones INCIDENT
+    
+            incidentActions
+                .querySelectorAll("button")
+                .forEach(button => {
+    
+                    button.disabled = false;
+    
+                    button.classList.remove(
+                        "opacity-50",
+                        "cursor-not-allowed"
+                    );
+    
+                    button.classList.add(
+                        "hover:bg-[#30374d]"
+                    );
+    
+                });
+    
         }
-
+    
     }
 
 
