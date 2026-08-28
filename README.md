@@ -2,7 +2,7 @@
 
 
 
-\[!\[Monitorización](https://img.shields.io/badge/github-repo-blue?logo=github)](https://lmgch.github.io/simulador/)
+\[!\ [Monitorización](https://img.shields.io/badge/github-repo-blue?logo=github)](https://lmgch.github.io/simulador/)
 
 \[!\ [1.1.0--dev](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/LMGCH/simulador)
 
