@@ -1074,22 +1074,23 @@ LOWER
                 <!-- COSTE -->
         
                 <div>
-        
+
                     <div class="text-xs text-gray-500">
-                        Coste estimado
+                        Puntos gastados
                     </div>
-        
+                
                     <div
                         id="operationalCost"
                         class="text-lg font-semibold mt-1">
-        
-                        €0
-        
+                
+                        0
+                
                     </div>
-        
+                
                 </div>
-        
-        
+     
+     
+       
                 <!-- USUARIOS -->
         
                 <div>
@@ -1144,9 +1145,138 @@ LOWER
         
         </div>
 
-    </div>    
+    </div>
+    <!-- =================================================
+        BALANCE DEL EJERCICIO
+    ================================================== -->
 
-</div> 
+    <div class="mt-5 pt-4 border-t border-[#2f3445]">
+
+        <div class="text-xs uppercase tracking-wider
+                    text-gray-500 mb-3">
+
+            ⚖️ Balance del ejercicio
+
+        </div>
+
+
+        <div class="grid grid-cols-2 gap-4">
+
+
+            <!-- PUNTOS GASTADOS -->
+
+            <div>
+
+                <div class="text-xs text-gray-500">
+                    Puntos gastados
+                </div>
+
+                <div
+                    id="balancePoints"
+                    class="text-lg font-semibold mt-1">
+
+                    0
+
+                </div>
+
+            </div>
+
+
+            <!-- USUARIOS AFECTADOS -->
+
+            <div>
+
+                <div class="text-xs text-gray-500">
+                    Usuarios afectados
+                </div>
+
+                <div
+                    id="balanceAffectedUsers"
+                    class="text-lg font-semibold mt-1">
+
+                    0
+
+                </div>
+
+            </div>
+
+
+            <!-- TIEMPO DE ESTABILIZACIÓN -->
+
+            <div>
+
+                <div class="text-xs text-gray-500">
+                    Tiempo de estabilización
+                </div>
+
+                <div
+                    id="balanceStabilizationTime"
+                    class="text-lg font-semibold mt-1">
+
+                    00:00
+
+                </div>
+
+            </div>
+
+
+            <!-- INTERVENCIONES -->
+
+            <div>
+
+                <div class="text-xs text-gray-500">
+                    Intervenciones realizadas
+                </div>
+
+                <div
+                    id="balanceInterventions"
+                    class="text-lg font-semibold mt-1">
+
+                    0
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ESTADO FINAL -->
+
+        <div class="mt-4">
+
+            <div class="text-xs text-gray-500">
+                Estado final
+            </div>
+
+            <div
+                id="balanceFinalState"
+                class="text-sm font-semibold mt-1">
+
+                EN ESPERA
+
+            </div>
+
+        </div>
+
+
+        <!-- LECTURA DEL BALANCE -->
+
+        <div
+            id="balanceMessage"
+            class="mt-4 p-3 rounded-lg
+                bg-[#252b3d]
+                border border-[#394056]
+                text-xs leading-relaxed text-gray-400">
+
+            El balance se mostrará al finalizar el ejercicio.
+
+        </div>
+
+    </div>
+
+</div>
+
 
 <!-- =================================================
 OPERATIONAL ASSESSMENT + TIMELINE

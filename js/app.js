@@ -828,6 +828,7 @@ const simulation = {
         cpuRelief: 0,
         latencyRelief: 0,
         userImpact: 0,
+        pointsSpent: 0,
 
         incidentAffectedUsers: 0,
 
@@ -1182,7 +1183,6 @@ system.errorRate =
 // Evitamos valores negativos
 system.errorRate = Math.max(0, system.errorRate);
 
-
 }
 // Nueva función 
 function updateServiceHealth(service){
@@ -1222,11 +1222,11 @@ function updateServiceHealth(service){
 
         if(service.cpu >= thresholds.services.critical.cpu){
 
-            delta -= 6;
+            delta -= 3;
 
         }else if(service.cpu >= thresholds.services.warning.cpu){
 
-            delta -= 2;
+            delta -= 1;
 
         }
 
@@ -1237,11 +1237,11 @@ function updateServiceHealth(service){
 
         if(service.latency >= thresholds.services.critical.latency){
 
-            delta -= 6;
+            delta -= 3;
 
         }else if(service.latency >= thresholds.services.warning.latency){
 
-            delta -= 2;
+            delta -= 1;
 
         }
 
@@ -1402,6 +1402,14 @@ function updateServiceHealth(service){
     // ==================================================
     // ACTUALIZAR HEALTH SCORE
     // ==================================================
+    console.log(
+        "HEALTH DEBUG:",
+        service.name,
+        "HealthScore antes:",
+        Math.round(service.healthScore),
+        "Delta:",
+        delta
+    );
 
     service.healthScore += delta;
 
@@ -6905,19 +6913,6 @@ function renderInterventionImpact(){
     const action =
         simulation.intervention.currentAction;
 
-        console.log(
-            "DEBUG HIGH_LOAD:",
-            {
-                mode: currentSimulationMode,
-                users: system.users,
-                normalCapacity: scenarios.NORMAL.users.max,
-                baseTargetUsers: simulation.baseTargetUsers,
-                targetUsers: simulation.targetUsers,
-                action: action,
-                userImpact: simulation.intervention.userImpact
-            }
-        );
-
     const costElement =
         document.getElementById("operationalCost");
 
@@ -7092,7 +7087,7 @@ function renderInterventionImpact(){
             if(affectedServices > 0){
 
                 costElement.textContent =
-                    "€0";
+                    "0";
 
                 usersElement.textContent =
                     Math.round(
@@ -7107,7 +7102,7 @@ function renderInterventionImpact(){
 
 
         costElement.textContent =
-        "€0";
+        "0";
     
     if(currentSimulationMode === "HIGH_LOAD"){
     
@@ -7121,13 +7116,9 @@ function renderInterventionImpact(){
             );
     
         usersElement.textContent =
-            affectedUsers;
-        
-        console.log(
-            "RENDER IMPACT:",
-            affectedUsers
-        );        
-  
+            affectedUsers;     
+      
+ 
     }else{
     
         usersElement.textContent =
@@ -7139,44 +7130,14 @@ function renderInterventionImpact(){
 
     }
 
-
     // ==================================================
-    // COSTES
+    // PUNTOS GASTADOS
     // ==================================================
-
-    const interventionCosts = {
-
-        // HIGH LOAD
-
-        "redistribute": "€€",
-
-        "limit-users": "€",
-
-        "reduce-load": "€",
-
-        "restart-service": "€€",
-
-        "protect-services": "€€€",
-
-        "no-action": "€0",
-
-
-        // INCIDENT
-
-        "incident-recover": "€€",
-
-        "incident-isolate": "€€",
-
-        "incident-partial": "€€",
-
-        "incident-no-action": "€0"
-
-    };
-
 
     costElement.textContent =
-        interventionCosts[action] || "€";
-
+        Math.round(
+            simulation.intervention.pointsSpent
+        );
 
     // ==================================================
     // USUARIOS AFECTADOS
@@ -7555,6 +7516,120 @@ function renderAPMInsights(){
 }
 
 // ======================================================
+// APM PERFORMANCE METRICS
+// ======================================================
+
+function renderAPMPerformanceMetrics(){
+
+    const container =
+        document.getElementById("apmPerformanceMetrics");
+
+    if(!container) return;
+
+
+    const metrics = [
+
+        {
+            title: "CPU",
+            value: `${system.cpu.toFixed(0)}%`,
+            description: "Uso actual del procesador",
+            icon: "🖥️"
+        },
+
+        {
+            title: "Memoria",
+            value: `${system.memory.toFixed(0)}%`,
+            description: "Uso actual de memoria",
+            icon: "💾"
+        },
+
+        {
+            title: "Latencia",
+            value: `${system.latency.toFixed(0)} ms`,
+            description: "Tiempo medio de respuesta",
+            icon: "⏱️"
+        },
+
+        {
+            title: "Tasa de errores",
+            value: `${system.errorRate.toFixed(2)}%`,
+            description: "Errores detectados en las solicitudes",
+            icon: "⚠️"
+        },
+
+        {
+            title: "Throughput",
+            value: `${system.throughput.toFixed(0)}`,
+            description: "Solicitudes procesadas por unidad de tiempo",
+            icon: "📈"
+        }
+
+    ];
+
+
+    container.innerHTML = "";
+
+
+    metrics.forEach(metric => {
+
+        container.innerHTML += `
+
+            <div
+                class="bg-[#252b3d]
+                       rounded-lg
+                       p-4
+                       border border-[#394056]">
+
+                <div
+                    class="flex justify-between
+                           items-center">
+
+                    <div class="flex items-center gap-3">
+
+                        <div class="text-xl">
+
+                            ${metric.icon}
+
+                        </div>
+
+                        <div>
+
+                            <div class="text-sm font-medium">
+
+                                ${metric.title}
+
+                            </div>
+
+                            <div class="text-xs text-gray-500 mt-1">
+
+                                ${metric.description}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="text-xl font-bold">
+
+                        ${metric.value}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        `;
+
+    });
+
+}
+
+
+// ======================================================
 // APM VIEW
 // ======================================================
 
@@ -7562,6 +7637,7 @@ function renderAPMView(){
 
     // Renderizado general de la vista APM
 
+    renderAPMPerformanceMetrics();
     renderAPMHealth();
     renderAPMInsights();
 
@@ -8206,6 +8282,19 @@ function tick(){
 
     updateGlobalSystemStatus();
 
+    // ==============================================
+    // DETECCIÓN DE ESTABILIZACIÓN OPERATIVA
+    // ==============================================
+
+    const systemIsStabilizing =
+        system.status === "DEGRADED" &&
+        system.cpu >= thresholds.system.cpu &&
+        system.cpu <= simulation.previousCpu &&
+        system.latency <= simulation.previousLatency;
+
+    simulation.isStabilized =
+        systemIsStabilizing;
+
     evaluateSystemState();
 
 
@@ -8327,6 +8416,8 @@ document.getElementById('scenarioSelect').addEventListener('change', (event) => 
     simulation.intervention.latencyRelief = 0;
 
     simulation.intervention.userImpact = 0;
+
+    simulation.intervention.pointsSpent = 0;
 
     simulation.intervention.restartTarget = null;
 
@@ -8574,6 +8665,43 @@ function initializeOperationalInterventions(){
 
             const action =
                 button.dataset.action;
+
+            // ==================================================
+            // PUNTOS DE INTERVENCIÓN
+            // ==================================================
+            
+            const interventionPoints = {
+            
+                // SOBRECARGA
+                "redistribute": 6,
+                "limit-users": 4,
+                "reduce-load": 5,
+                "restart-service": 7,
+                "protect-services": 8,
+            
+                // INCIDENTE
+                "incident-recover": 8,
+                "incident-isolate": 7,
+                "incident-partial": 5,
+            
+                // No intervenir no consume puntos
+                "no-action": 0,
+                "incident-no-action": 0
+            
+            };
+
+            // ==================================================
+            // REGISTRAR PUNTOS DE LA INTERVENCIÓN
+            // ==================================================
+
+            if(
+                simulation.intervention.currentAction !== action
+            ){
+
+                simulation.intervention.pointsSpent +=
+                    interventionPoints[action] || 0;
+
+            }
 
             // ==================================================
             // RECUPERACIÓN DE INCIDENTE
