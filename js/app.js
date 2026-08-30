@@ -839,10 +839,48 @@ const simulation = {
     
     },
     
+    // ======================================================
+    // BALANCE DEL EJERCICIO
+    // ======================================================
+    
+    exercise: {
+    
+        active: false,
+        completed: false,
+    
+        scenario: null,
+    
+        startedAt: null,
+        finishedAt: null,
+    
+        points: 0,
+        affectedUsers: 0,
+        interventions: 0,
+    
+        // ==============================================
+        // CONTROL DE ESTABILIDAD — HIGH_LOAD
+        // ==============================================
+    
+        stableTicks: 0,
+    
+        requiredStableTicks: 3,
+    
+        // ==============================================
+        // ESTADO FINAL
+        // ==============================================
+    
+        finalState: "EN ESPERA"
+    
+    },
+
+    
+  
+
     previousCpu: system.cpu,
     previousLatency: system.latency    
 
 };
+
 
 
 
@@ -940,6 +978,354 @@ HIGH_LOAD:{
 }; // ← Cierra el objeto scenarios
 
 // ======================================================
+// INICIO DEL EJERCICIO
+// ======================================================
+
+function startExercise(scenario){
+
+    simulation.exercise.active = true;
+    simulation.exercise.completed = false;
+
+    simulation.exercise.scenario = scenario;
+
+    simulation.exercise.startedAt = Date.now();
+    simulation.exercise.finishedAt = null;
+
+    simulation.exercise.points = 0;
+    simulation.exercise.affectedUsers = 0;
+    simulation.exercise.interventions = 0;
+
+    simulation.exercise.finalState = "EN CURSO";
+
+    renderExerciseBalance();
+
+}
+
+// ======================================================
+// REGISTRO DE INTERVENCIÓN DEL EJERCICIO
+// ======================================================
+
+function registerExerciseIntervention(){
+
+    if(!simulation.exercise.active){
+        return;
+    }
+
+    simulation.exercise.interventions++;
+
+    simulation.exercise.points =
+        simulation.intervention.pointsSpent;
+
+    renderExerciseBalance();
+
+}
+
+// ======================================================
+// FINALIZACIÓN DEL EJERCICIO
+// ======================================================
+
+function finishExercise(finalState){
+
+    if(!simulation.exercise.active){
+        return;
+    }
+
+    if(simulation.exercise.completed){
+        return;
+    }
+
+    simulation.exercise.active = false;
+    simulation.exercise.completed = true;
+
+    simulation.exercise.finishedAt = Date.now();
+
+    simulation.exercise.finalState = finalState;
+
+    renderExerciseBalance();
+
+}
+
+// ======================================================
+// RENDER BALANCE DEL EJERCICIO
+// ======================================================
+
+function renderExerciseBalance(){
+
+   const exercise = simulation.exercise;
+
+   console.log(
+        "BALANCE:",
+        exercise.startedAt,
+        exercise.finishedAt,
+        exercise.active,
+        exercise.completed
+    );
+
+   const pointsEl =
+       document.getElementById("balancePoints");
+
+   const usersEl =
+       document.getElementById("balanceAffectedUsers");
+
+   const timeEl =
+       document.getElementById("balanceStabilizationTime");
+
+   const interventionsEl =
+       document.getElementById("balanceInterventions");
+
+   const finalStateEl =
+       document.getElementById("balanceFinalState");
+
+   const messageEl =
+       document.getElementById("balanceMessage");
+
+
+   // ==============================================
+   // SEGURIDAD
+   // ==============================================
+
+   if(
+       !pointsEl ||
+       !usersEl ||
+       !timeEl ||
+       !interventionsEl ||
+       !finalStateEl ||
+       !messageEl
+   ){
+
+       return;
+
+   }
+
+
+   // ==============================================
+   // PUNTOS
+   // ==============================================
+
+   pointsEl.textContent =
+       exercise.points;
+
+
+   // ==============================================
+   // USUARIOS AFECTADOS
+   // ==============================================
+
+   usersEl.textContent =
+       Math.round(exercise.affectedUsers);
+
+
+   // ==============================================
+   // INTERVENCIONES
+   // ==============================================
+
+   interventionsEl.textContent =
+       exercise.interventions;
+
+
+   // ==============================================
+   // TIEMPO
+   // ==============================================
+
+   let elapsed = 0;
+
+   if(exercise.startedAt){
+
+       const end =
+           exercise.finishedAt || Date.now();
+
+       elapsed =
+           Math.max(
+               0,
+               end - exercise.startedAt
+           );
+
+   }
+
+
+   const totalSeconds =
+       Math.floor(elapsed / 1000);
+
+   const minutes =
+       Math.floor(totalSeconds / 60);
+
+   const seconds =
+       totalSeconds % 60;
+
+
+   timeEl.textContent =
+       `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+
+    console.log(
+        "TIEMPO BALANCE:",
+        elapsed,
+        totalSeconds,
+        minutes,
+        seconds
+    );
+
+   // ==============================================
+   // ESTADO FINAL
+   // ==============================================
+
+   finalStateEl.textContent =
+       exercise.finalState;
+
+
+   // ==============================================
+   // MENSAJE
+   // ==============================================
+
+   if(exercise.completed){
+
+       if(exercise.scenario === "HIGH_LOAD"){
+
+           messageEl.textContent =
+               "El ejercicio de sobrecarga ha finalizado. " +
+               "El sistema ha recuperado una situación estable.";
+
+       }
+       else if(exercise.scenario === "INCIDENT"){
+
+           messageEl.textContent =
+               "El ejercicio de incidente ha finalizado. " +
+               "Los servicios afectados han sido recuperados.";
+
+       }
+
+   }
+   else if(exercise.active){
+
+       messageEl.textContent =
+           "Ejercicio en curso. El resultado se actualizará " +
+           "hasta alcanzar la condición de finalización.";
+
+   }
+   else{
+
+       messageEl.textContent =
+           "El balance se mostrará al finalizar el ejercicio.";
+
+   }
+
+}
+
+
+// ======================================================
+// CONTROL DEL CICLO DEL EJERCICIO
+// ======================================================
+
+function updateExerciseLifecycle(){
+
+    const exercise = simulation.exercise;
+    const scenario = simulation.currentScenario;
+
+
+    // ==================================================
+    // INICIO DEL EJERCICIO
+    // ==================================================
+
+    if(
+        !exercise.active &&
+        !exercise.completed &&
+        (scenario === "HIGH_LOAD" || scenario === "INCIDENT")
+    ){
+
+        exercise.active = true;
+
+        exercise.completed = false;
+
+        exercise.scenario = scenario;
+
+        exercise.startedAt = Date.now();
+
+        exercise.finishedAt = null;
+
+        exercise.points = 0;
+
+        exercise.affectedUsers = 0;
+
+        exercise.interventions = 0;
+
+        exercise.finalState = "EN CURSO";
+
+
+        // ----------------------------------------------
+        // IMPORTANTE:
+        // Este ciclo solo inicia el ejercicio.
+        // NO puede finalizar en el mismo tick.
+        // ----------------------------------------------
+
+        return;
+    }
+
+
+    // ==================================================
+    // SI NO HAY EJERCICIO ACTIVO, NO HACER NADA
+    // ==================================================
+
+    if(!exercise.active){
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // COMPROBAR FINALIZACIÓN
+    // ==================================================
+
+    let resolved = false;
+
+
+    // ==================================================
+    // SOBRECARGA
+    // ==================================================
+
+    if(scenario === "HIGH_LOAD"){
+
+        resolved =
+            simulation.isStabilized === true;
+
+    }
+
+
+    // ==================================================
+    // INCIDENTE
+    // ==================================================
+
+    if(scenario === "INCIDENT"){
+
+        const servicesDown =
+            Object.values(services)
+                .filter(service =>
+                    service.status === "DOWN"
+                ).length;
+
+        resolved =
+            servicesDown === 0;
+
+    }
+
+
+    // ==================================================
+    // FINALIZAR EJERCICIO
+    // ==================================================
+
+    if(resolved){
+
+        exercise.active = false;
+
+        exercise.completed = true;
+
+        exercise.finishedAt = Date.now();
+
+        exercise.finalState = "RESUELTO";
+
+    }
+
+}
+
+// ======================================================
 // THRESHOLDS
 // ======================================================
 
@@ -980,6 +1366,31 @@ const thresholds = {
         cpu: 60,
         latency: 150,
         errorRate: 0.10
+
+    }
+
+};
+
+
+// ======================================================
+// CRITERIOS DE ESTABILIDAD DEL EJERCICIO
+// ======================================================
+
+const exerciseStability = {
+
+    HIGH_LOAD: {
+
+        cpu: {
+            min: 70,
+            max: 100
+        },
+
+        latency: {
+            min: 140,
+            max: 210
+        },
+
+        requiredTicks: 3
 
     }
 
@@ -4909,6 +5320,32 @@ function resetSimulation(){
 
     simulation.tick = 0;
 
+    // ==================================================
+    // RESET DEL EJERCICIO
+    // ==================================================
+
+    simulation.exercise.active = false;
+
+    simulation.exercise.completed = false;
+
+    simulation.exercise.scenario = null;
+
+    simulation.exercise.startedAt = null;
+
+    simulation.exercise.finishedAt = null;
+
+    simulation.exercise.points = 0;
+
+    simulation.exercise.affectedUsers = 0;
+
+    simulation.exercise.interventions = 0;
+
+    simulation.exercise.stableTicks = 0;
+
+    simulation.exercise.finalState = "EN ESPERA";
+
+    simulation.isStabilized = false;
+
     simulation.cpuOffset = 0;
 
     simulation.latencyOffset = 0;
@@ -5940,6 +6377,7 @@ function renderSimulationPanel(){
 
         if(simulationPaused){
 
+
             engineStatus.textContent =
                 "⏸ Pausado";
 
@@ -6145,6 +6583,7 @@ function evaluateSystemState(){
 // ======================================================
 
 function updateInterventionEffects(){
+
 
     const action =
         simulation.intervention.currentAction;
@@ -6436,6 +6875,7 @@ function updateInterventionEffects(){
     }
 
 }
+
 
 // ======================================================
 // RENDERIZADO DE INTERVENCIÓN OPERATIVA
@@ -8277,6 +8717,12 @@ function tick(){
     }
 
     // ==============================================
+    // CONTADOR DE TICKS
+    // ==============================================
+
+    simulation.tick++;
+
+    // ==============================================
     // Calcula el nuevo estado del sistema
     // SIMULACIÓN
     // ==============================================
@@ -8288,8 +8734,8 @@ function tick(){
 
     simulateServices();
 
-    updateInterventionEffects();    
-
+    updateInterventionEffects();
+    
 
     // ==============================================
     // ESTADO GLOBAL
@@ -8298,20 +8744,146 @@ function tick(){
     updateGlobalSystemStatus();
 
     // ==============================================
-    // DETECCIÓN DE ESTABILIZACIÓN OPERATIVA
+    // DETECCIÓN DE ESTABILIDAD OPERATIVA
+    // HIGH_LOAD
     // ==============================================
+    
+    let systemIsStable = false;
+    
+    
+    // ==================================================
+    // NORMAL NO UTILIZA ESTABILIDAD DE EJERCICIO
+    // INCIDENT TAMPOCO
+    // ==================================================
+    
+    if(simulation.currentScenario === "HIGH_LOAD"){
+    
+        const stability =
+            exerciseStability.HIGH_LOAD;
+    
+    
+        systemIsStable =
+            system.cpu >= stability.cpu.min &&
+            system.cpu <= stability.cpu.max &&
+            system.latency >= stability.latency.min &&
+            system.latency <= stability.latency.max;
+    
+    
+        // ==============================================
+        // CONTROL DE TICKS ESTABLES
+        // ==============================================
+    
+        if(systemIsStable){
+    
+            simulation.exercise.stableTicks++;
+    
+        }else{
+    
+            simulation.exercise.stableTicks = 0;
+    
+        }
+    
+    
+        simulation.isStabilized =
+            simulation.exercise.stableTicks >=
+            stability.requiredTicks;
+    
+    
+    }else{
+    
+        simulation.exercise.stableTicks = 0;
+    
+        simulation.isStabilized = false;
+    
+    }
+    
+    
+    // ==============================================
+    // DEBUG
+    // ==============================================
+    
+    console.log(
+        "STABILITY DEBUG:",
+        "scenario =", simulation.currentScenario,
+        "insideBand =", systemIsStable,
+        "stableTicks =", simulation.exercise.stableTicks,
+        "requiredTicks =",
+            simulation.currentScenario === "HIGH_LOAD"
+                ? exerciseStability.HIGH_LOAD.requiredTicks
+                : 0,
+        "isStabilized =", simulation.isStabilized,
+        "cpu =", system.cpu,
+        "latency =", system.latency
+    );
 
-    const systemIsStabilizing =
-        system.status === "DEGRADED" &&
-        system.cpu >= thresholds.system.cpu &&
-        system.cpu <= simulation.previousCpu &&
-        system.latency <= simulation.previousLatency;
-
-    simulation.isStabilized =
-        systemIsStabilizing;
+    
 
     evaluateSystemState();
 
+    // ==============================================
+    // CONTROL DEL EJERCICIO
+    // ==============================================
+
+    if(
+        simulation.exercise &&
+        simulation.exercise.active
+    ){
+
+        // ------------------------------------------
+        // SOBRECARGA
+        // ------------------------------------------
+
+        console.log(
+            "FINISH CHECK:",
+            "active =", simulation.exercise.active,
+            "stabilized =", simulation.isStabilized,
+            "currentAction =", simulation.intervention.currentAction,
+            "interventions =", simulation.exercise.interventions,
+            "tick =", simulation.tick
+        );
+
+        if(
+            simulation.currentScenario === "HIGH_LOAD" &&
+            simulation.isStabilized &&
+            simulation.intervention.currentAction &&
+            simulation.tick > 1
+        ){
+        
+            finishExercise("RESUELTO");
+        
+        }
+
+        
+
+
+        // ------------------------------------------
+        // INCIDENTE
+        // ------------------------------------------
+
+        if(
+            simulation.currentScenario === "INCIDENT"
+        ){
+
+            const downServices =
+                Object.values(services)
+                    .filter(service =>
+                        service.status === "DOWN"
+                    );
+
+
+
+            if(
+                downServices.length === 0 &&
+                simulation.tick > 1
+            ){
+            
+                finishExercise("RESUELTO");
+            
+            }                   
+
+        }
+
+    }
 
     // ==============================================
     // ALERTAS
@@ -8344,6 +8916,8 @@ function tick(){
     renderOperationalIntervention();
 
     renderInterventionImpact();
+
+    renderExerciseBalance();
 
 
     // ==============================================
@@ -8421,26 +8995,38 @@ document.getElementById('scenarioSelect').addEventListener('change', (event) => 
     simulation.currentScenario = selectedScenario;
 
     // ==================================================
-    // REINICIAR INTERVENCIÓN AL CAMBIAR DE ESCENARIO
+    // INICIAR EJERCICIO
     // ==================================================
 
-    simulation.intervention.currentAction = null;
-
-    simulation.intervention.cpuRelief = 0;
-
-    simulation.intervention.latencyRelief = 0;
-
-    simulation.intervention.userImpact = 0;
-
-    simulation.intervention.pointsSpent = 0;
-
-    simulation.intervention.restartTarget = null;
-
-    simulation.intervention.recoveredServices = [];
+    startExercise(selectedScenario);
 
     // ==================================================
 
     const scenario = scenarios[selectedScenario];
+
+    // ==================================================
+    // REINICIAR INTERVENCIÓN AL CAMBIAR DE ESCENARIO
+    // ==================================================
+    
+    simulation.intervention.currentAction = null;
+    
+    simulation.intervention.cpuRelief = 0;
+    
+    simulation.intervention.latencyRelief = 0;
+    
+    simulation.intervention.userImpact = 0;
+    
+    simulation.intervention.pointsSpent = 0;
+    
+    simulation.intervention.restartTarget = null;
+    
+    simulation.intervention.incidentTarget = null;
+    
+    simulation.intervention.recoveredServices = [];
+
+    
+
+
 
     simulation.baseTargetUsers =
         Math.round(
@@ -8465,7 +9051,6 @@ document.getElementById('scenarioSelect').addEventListener('change', (event) => 
         "SCENARIO",
         `La situación ha cambiado a ${selectedScenario}. Target users: ${simulation.targetUsers}`
     );
-
 
 });
 
@@ -8719,13 +9304,33 @@ function initializeOperationalInterventions(){
             }
 
             // ==================================================
+            // REGISTRAR INTERVENCIÓN EN EL EJERCICIO
+            // ==================================================
+
+            if(
+                simulation.intervention.currentAction !== action &&
+                simulation.exercise.active
+            ){
+
+                simulation.exercise.interventions++;
+
+                simulation.exercise.points =
+                    simulation.intervention.pointsSpent;
+
+            }
+
+            // ==================================================
             // RECUPERACIÓN DE INCIDENTE
             // ==================================================
-            
+         
             if(action === "incident-recover"){
+            
+                registerExerciseIntervention();
             
                 simulation.intervention.currentAction =
                     action;
+
+            
             
                 // La Base de Datos es el origen
                 // del incidente definido en este escenario
@@ -8744,8 +9349,11 @@ function initializeOperationalInterventions(){
             // ==================================================
             // REINICIAR SERVICIO AFECTADO
             // ==================================================
-
+             
             if(action === "restart-service"){
+            
+                registerExerciseIntervention();
+              
 
                 const currentTarget =
                     simulation.intervention.restartTarget;
@@ -8832,7 +9440,18 @@ function initializeOperationalInterventions(){
                 return;
 
             }
+            // ==================================================
+            // REGISTRAR INTERVENCIÓN EN EL EJERCICIO
+            // ==================================================
 
+            if(
+                action !== "no-action" &&
+                action !== "incident-no-action"
+            ){
+
+                registerExerciseIntervention();
+
+            }
 
             // ==================================================
             // RESTO DE INTERVENCIONES
@@ -8851,6 +9470,390 @@ function initializeOperationalInterventions(){
     });
 
 }
+
+// ======================================================
+// CONTROL DEL CICLO DEL EJERCICIO
+// ======================================================
+
+function initializeExerciseControl(){
+
+    const scenarioSelect =
+        document.getElementById("scenarioSelect");
+
+    // ==================================================
+    // ESTADO DEL EJERCICIO
+    // ==================================================
+
+    simulation.exercise = {
+
+        active: false,
+
+        completed: false,
+
+        startTime: null,
+
+        endTime: null,
+
+        stabilizationTime: 0,
+
+        interventions: 0
+
+    };
+
+
+    // ==================================================
+    // INICIAR EJERCICIO
+    // ==================================================
+    
+    function startExercise(){
+    
+        const scenario =
+            scenarioSelect
+                ? scenarioSelect.value
+                : "NORMAL";
+    
+    
+        // ==================================================
+        // NORMAL NO ES UN EJERCICIO
+        // ==================================================
+    
+        if(scenario === "NORMAL"){
+    
+            simulation.exercise.active = false;
+    
+            simulation.exercise.completed = false;
+    
+            simulation.exercise.scenario = null;
+    
+            simulation.exercise.startedAt = null;
+    
+            simulation.exercise.finishedAt = null;
+    
+            simulation.exercise.points = 0;
+    
+            simulation.exercise.affectedUsers = 0;
+    
+            simulation.exercise.interventions = 0;
+    
+            simulation.exercise.finalState = "EN ESPERA";
+    
+            return;
+    
+        }
+    
+    
+        // ==================================================
+        // INICIAR NUEVO EJERCICIO
+        // ==================================================
+    
+        simulation.exercise.active = true;
+    
+        simulation.exercise.completed = false;
+    
+        simulation.exercise.scenario = scenario;
+    
+        simulation.exercise.startedAt = Date.now();
+    
+        simulation.exercise.finishedAt = null;
+    
+        simulation.exercise.points = 0;
+    
+        simulation.exercise.affectedUsers = 0;
+    
+        simulation.exercise.interventions = 0;
+    
+        simulation.exercise.finalState = "EN CURSO";
+    
+    
+        // ==================================================
+        // ACTUALIZAR BALANCE
+        // ==================================================
+    
+        renderExerciseBalance();
+    
+    
+        console.log(
+            "Ejercicio iniciado:",
+            scenario
+        );
+    
+    }
+
+    // ==================================================
+    // CAMBIO DE ESCENARIO
+    // ==================================================
+
+    if(scenarioSelect){
+
+        scenarioSelect.addEventListener(
+            "change",
+            () => {
+
+                const scenario =
+                    scenarioSelect.value;
+
+
+                // ==================================================
+                // REINICIAR COMPLETAMENTE EL EJERCICIO ANTERIOR
+                // ==================================================
+                
+                simulation.exercise.active = false;
+                
+                simulation.exercise.completed = false;
+                
+                simulation.exercise.scenario = null;
+                
+                simulation.exercise.startedAt = null;
+                
+                simulation.exercise.finishedAt = null;
+                
+                simulation.exercise.points = 0;
+                
+                simulation.exercise.affectedUsers = 0;
+                
+                simulation.exercise.interventions = 0;
+                
+                simulation.exercise.finalState = "EN ESPERA";
+
+                // El ejercicio comienza
+                // al seleccionar HIGH_LOAD o INCIDENT
+
+                if(
+                    scenario === "HIGH_LOAD" ||
+                    scenario === "INCIDENT"
+                ){
+
+                    startExercise();
+
+                }
+
+
+                renderExerciseBalance();
+
+            }
+        );
+
+    }
+
+
+    // ==================================================
+    // REGISTRAR INTERVENCIÓN
+    // ==================================================
+
+
+    window.registerExerciseIntervention = function(){
+    
+        if(
+            !simulation.exercise ||
+            !simulation.exercise.active
+        ){
+    
+            return;
+    
+        }
+    
+        simulation.exercise.interventions++;
+    
+        console.log(
+            "Intervención registrada:",
+            simulation.exercise.interventions
+        );
+    
+        updateExerciseBalance();
+    
+    };
+   
+
+
+    // ==================================================
+    // EXPONER FINALIZACIÓN
+    // ==================================================
+
+    window.finishExercise = finishExercise;
+
+
+    // ==================================================
+    // ESTADO INICIAL
+    // ==================================================
+
+    updateExerciseBalance();
+
+}
+
+// ======================================================
+// BALANCE DEL EJERCICIO
+// ======================================================
+
+function updateExerciseBalance(){
+
+    const points =
+        document.getElementById("balancePoints");
+
+    const users =
+        document.getElementById("balanceAffectedUsers");
+
+    const stabilization =
+        document.getElementById("balanceStabilizationTime");
+
+    const interventions =
+        document.getElementById("balanceInterventions");
+
+    const finalState =
+        document.getElementById("balanceFinalState");
+
+    const message =
+        document.getElementById("balanceMessage");
+
+
+    // ==================================================
+    // SEGURIDAD
+    // ==================================================
+
+    if(
+        !points ||
+        !users ||
+        !stabilization ||
+        !interventions ||
+        !finalState ||
+        !message
+    ){
+
+        return;
+
+    }
+
+
+    // ==================================================
+    // PUNTOS
+    // ==================================================
+
+    points.textContent =
+        simulation.intervention.pointsSpent || 0;
+
+
+    // ==================================================
+    // USUARIOS AFECTADOS
+    // ==================================================
+    
+    let affectedUsers = 0;
+    
+    
+    if(
+        simulation.currentScenario === "INCIDENT"
+    ){
+    
+        affectedUsers =
+            Math.round(
+                simulation.intervention.incidentAffectedUsers || 0
+            );
+    
+    }
+    
+    
+    else if(
+        simulation.currentScenario === "HIGH_LOAD"
+    ){
+    
+        affectedUsers =
+            Math.max(
+                0,
+                Math.round(
+                    system.users -
+                    scenarios.NORMAL.users.max
+                )
+            );
+    
+    }
+    
+    
+    users.textContent =
+        affectedUsers;
+       
+
+    // ==================================================
+    // INTERVENCIONES
+    // ==================================================
+
+    interventions.textContent =
+        simulation.exercise
+            ? simulation.exercise.interventions
+            : 0;
+
+
+    // ==================================================
+    // TIEMPO
+    // ==================================================
+
+    if(
+        simulation.exercise &&
+        simulation.exercise.stabilizationTime > 0
+    ){
+
+        const totalSeconds =
+            Math.floor(
+                simulation.exercise.stabilizationTime / 1000
+            );
+
+        const minutes =
+            Math.floor(totalSeconds / 60);
+
+        const seconds =
+            totalSeconds % 60;
+
+
+        stabilization.textContent =
+            `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+
+    }else{
+
+        stabilization.textContent =
+            "00:00";
+
+    }
+
+
+    // ==================================================
+    // ESTADO FINAL
+    // ==================================================
+
+    if(
+        simulation.exercise &&
+        simulation.exercise.completed
+    ){
+
+        finalState.textContent =
+            "RESUELTO";
+
+
+        message.textContent =
+            "El ejercicio ha finalizado. La situación ha sido resuelta.";
+
+    }else if(
+        simulation.exercise &&
+        simulation.exercise.active
+    ){
+
+        finalState.textContent =
+            "EN CURSO";
+
+
+        message.textContent =
+            "Ejercicio en curso. El balance se actualizará al finalizar.";
+
+    }else{
+
+        finalState.textContent =
+            "EN ESPERA";
+
+
+        message.textContent =
+            "El balance se mostrará al finalizar el ejercicio.";
+
+    }
+
+}
+
+
 
 // ======================================================
 // INICIALIZACIÓN DE INTERVENCIONES OPERATIVAS
