@@ -1402,6 +1402,7 @@ function updateServiceHealth(service){
     // ==================================================
     // ACTUALIZAR HEALTH SCORE
     // ==================================================
+    
     console.log(
         "HEALTH DEBUG:",
         service.name,
@@ -1410,9 +1411,9 @@ function updateServiceHealth(service){
         "Delta:",
         delta
     );
-
+    
     service.healthScore += delta;
-
+    
     service.healthScore =
         Math.max(
             0,
@@ -1553,7 +1554,21 @@ function simulateServices(){
 
     simulateBaseServices();
 
+    //console.log("🔵 ANTES propagateDependencies", {
+    //    gatewayCPU: services.gateway.cpu,
+    //    gatewayLatency: services.gateway.latency,
+    //    apiCPU: services.api.cpu,
+    //    apiLatency: services.api.latency
+    //});
+
     propagateDependencies();
+
+    //console.log("🔴 DESPUÉS propagateDependencies", {
+    //    gatewayCPU: services.gateway.cpu,
+    //    gatewayLatency: services.gateway.latency,
+    //    apiCPU: services.api.cpu,
+    //    apiLatency: services.api.latency
+    //});
 
     Object.values(services).forEach(service => {
 
